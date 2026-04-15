@@ -23,12 +23,12 @@ type Box = {
 
 // 1. Update the ORBIT_ITEMS to include the new visual icon
 const ORBIT_ITEMS = [
-  { image: null, emoji: "🏨", labelKey: "Weekend", color: "bg-blue-50" },
-  { image: null, emoji: "🍽️", labelKey: "Restaurants", color: "bg-red-50" },
+  { image: "/images/orbit1.png", emoji: null, labelKey: "Weekend", color: "bg-blue-50" },
+  { image: "images/orbit1.png", emoji: null, labelKey: "Restaurants", color: "bg-red-50" },
   { image: "/images/orbit1.png", emoji: null, labelKey: "Wellness", color: "white" },
-  { image: null, emoji: "🏔️", labelKey: "Adventure", color: "bg-orange-50" },
-  { image: null, emoji: "✈️", labelKey: "Travel", color: "bg-yellow-50" },
-  { image: null, emoji: "🎉", labelKey: "Event", color: "bg-purple-50" }, // Added Event
+  { image: "/images/orbit1.png", emoji: null, labelKey: "Adventure", color: "bg-orange-50" },
+  { image: "/images/orbit1.png", emoji: null, labelKey: "Travel", color: "bg-yellow-50" },
+  { image: "/images/orbit1.png", emoji: null, labelKey: "Event", color: "bg-purple-50" }, // Added Event
 ];
 
 // 2. Add 'Event' to your filtering array
@@ -143,12 +143,7 @@ export default function Home() {
             >
               {ORBIT_ITEMS.map((item) => (
                 <SwiperSlide key={item.labelKey} style={{ width: '220px' }}>
-                  <div className={`
-                    w-full h-64 md:h-80 ${item.color} rounded-[2.5rem] md:rounded-[3rem] shadow-2xl 
-                    flex flex-col items-center justify-center 
-                    border border-white/80 backdrop-blur-md
-                    transition-all duration-500 hover:border-yellow-400
-                  `}>
+                <div className="w-full h-64 md:h-80 flex flex-col items-center justify-center">
                      <img 
                       src={item.image ?? undefined} 
                       alt={item.labelKey} 
