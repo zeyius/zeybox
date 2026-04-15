@@ -34,7 +34,7 @@ export default function Account() {
         .from("profiles")
         .select("user_id, role, full_name, phone")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) console.error(error);
       setProfile((data as Profile) ?? null);

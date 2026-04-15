@@ -17,19 +17,23 @@ type Box = {
   price_dzd: number;
   description: string | null;
   validity_days: number;
-  category: string; // Added category to type
+  category: string;
+  tier: string; // Added tier to match database
 };
 
+// 1. Update the ORBIT_ITEMS to include the new visual icon
 const ORBIT_ITEMS = [
   { image: null, emoji: "🏨", labelKey: "Weekend", color: "bg-blue-50" },
-  { image: null, emoji: "🍽️", labelKey: "Dining", color: "bg-red-50" },
-  { image: null, emoji: "💆", labelKey: "Wellness", color: "bg-teal-50" },
+  { image: null, emoji: "🍽️", labelKey: "Restaurants", color: "bg-red-50" },
+  { image: "/images/orbit1.png", emoji: null, labelKey: "Wellness", color: "white" },
   { image: null, emoji: "🏔️", labelKey: "Adventure", color: "bg-orange-50" },
-  { image: null, emoji: "🎁", labelKey: "Event", color: "bg-yellow-50" },
+  { image: null, emoji: "✈️", labelKey: "Travel", color: "bg-yellow-50" },
+  { image: null, emoji: "🎉", labelKey: "Event", color: "bg-purple-50" }, // Added Event
 ];
 
-// Added 'Event' to categories to match your new SQL structure
-const CATEGORIES = ["Wellness", "Restaurant", "Adventure", "Weekend", "Event"];
+// 2. Add 'Event' to your filtering array
+const CATEGORIES = ["Wellness", "Restaurants", "Adventure", "Weekend", "Travel", "Event"];
+
 
 const HERO_SLIDES = [
   { image: "/images/hero1.png", titleEn: "Perfect Gift", titleAr: "هدية مثالية" },
@@ -47,7 +51,8 @@ export default function Home() {
     const loadBoxes = async () => {
       const { data } = await supabase
         .from("boxes")
-        .select("id, name, price_dzd, description, validity_days, category") // Added category to select
+        // FIXED: Added 'tier' to the selection
+        .select("id, name, price_dzd, description, validity_days, category, tier") 
         .eq("is_active", true);
       setBoxes((data as Box[]) || []);
     };
@@ -144,13 +149,17 @@ export default function Home() {
                     border border-white/80 backdrop-blur-md
                     transition-all duration-500 hover:border-yellow-400
                   `}>
-                    <span className="text-5xl md:text-7xl mb-4 md:mb-6 animate-float">{item.emoji}</span>
+                     <img 
+                      src={item.image} 
+                      alt={item.labelKey} 
+                      className="w-32 md:w-44 object-contain mb-4 md:mb-6 animate-float drop-shadow-lg" 
+                    />
                     <span className="text-[10px] md:text-sm font-black uppercase text-gray-700 tracking-[0.2em] text-center px-4">
                       {i18n.language === 'en' ? item.labelKey : (
                         item.labelKey === "Weekend" ? "عطلة" :
-                        item.labelKey === "Restaurant" ? "مطاعم" :
+                        item.labelKey === "Restaurants" ? "مطاعم" :
                         item.labelKey === "Wellness" ? "استرخاء" : 
-                        item.labelKey === "Event" ? "فعاليات" : "مغامرة"
+                        item.labelKey === "Travel" ? "سفر" : "مغامرة"
                       )}
                     </span>
                   </div>
@@ -171,25 +180,25 @@ export default function Home() {
             <div className="h-1.5 w-16 bg-yellow-400 mt-2 rounded-full" />
           </div>
 
-          {/* Logic changed: Map through each category and filter boxes */}
           {CATEGORIES.map((cat) => {
             const categoryBoxes = boxes.filter(b => b.category === cat);
             
-            // Skip rendering the section if no boxes exist for this category
             if (categoryBoxes.length === 0) return null;
 
             return (
               <div key={cat} className="mb-16 last:mb-0">
                 <div className="flex items-center gap-3 mb-6">
                   <span className="bg-red-600 text-white font-black text-[10px] px-3 py-1 rounded-md italic">
-                    {t('label_new')}
+                    {categoryBoxes[0].tier} {/* Shows SILVER/GOLD/DIAMOND badge */}
                   </span>
                   <h3 className="text-xl md:text-2xl font-black text-gray-900 uppercase">
                     {i18n.language === 'en' ? cat : (
-                      cat === "Wellness" ? "عناية واسترخاء" : 
-                      cat === "Restaurants" ? "مطاعم فاخرة" : 
-                      cat === "Adventure" ? "مغامرات" : 
-                      cat === "Weekend" ? "عطلة" : "مطاعم"
+                        cat === "Wellness" ? "عناية واسترخاء" : 
+                        cat === "Restaurants" ? "مطاعم فاخرة" : 
+                        cat === "Adventure" ? "مغامرات" : 
+                        cat === "Weekend" ? "عطلة نهاية الأسبوع" : 
+                        cat === "Travel" ? "سفر ورحلات" :
+                        "فعاليات ومناسبات" // Arabic for Event
                     )}
                   </h3>
                 </div>

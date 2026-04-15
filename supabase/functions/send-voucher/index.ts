@@ -1,12 +1,30 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { jsPDF } from "https://esm.sh/jspdf@2.5.1"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7"
 
 serve(async (req) => {
   try {
     const { record } = await req.json()
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+    
+    // 1. Initialize Supabase to fetch the generated voucher
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    // 1. Generate the PDF Voucher
+    // Wait a tiny moment for the trigger to finish inserting the voucher
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const { data: voucher } = await supabase
+      .from('vouchers')
+      .select('voucher_code')
+      .eq('order_id', record.id)
+      .single()
+
+    const displayCode = voucher?.voucher_code || `ZBX-${record.id.slice(0, 8).toUpperCase()}`;
+
+    // 2. Generate the PDF Voucher
     const doc = new jsPDF()
     
     // Aesthetic Header
@@ -22,7 +40,7 @@ serve(async (req) => {
     doc.setFontSize(22)
     doc.text("OFFICIAL GIFT VOUCHER", 105, 60, { align: "center" })
     
-    doc.setDrawColor(250, 204, 21) // ZEYBOX Yellow
+    doc.setDrawColor(250, 204, 21)
     doc.setLineWidth(1.5)
     doc.line(70, 65, 140, 65)
 
@@ -32,13 +50,12 @@ serve(async (req) => {
     doc.text(`From: ${record.buyer_name}`, 105, 95, { align: "center" })
 
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(18)
-    doc.text(`CODE: ZBX-${record.id.slice(0, 8).toUpperCase()}`, 105, 120, { align: "center" })
+    doc.setFontSize(22)
+    doc.text(`CODE: ${displayCode}`, 105, 120, { align: "center" })
 
-    // PDF Output
     const pdfBase64 = doc.output("datauristring").split(',')[1]
 
-    // 2. Send via Resend with Website Vibe & Instructions
+    // 3. Send via Resend
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -56,17 +73,17 @@ serve(async (req) => {
               <div style="height: 4px; width: 40px; background-color: #facc15; margin: 15px auto; border-radius: 10px;"></div>
             </div>
             <div style="padding: 40px; text-align: center;">
-              <h2 style="font-size: 26px; font-weight: 900; margin-top: 0;">YOUR EXPERIENCE IS READY</h2>
+              <h2 style="font-size: 26px; font-weight: 900; margin-top: 0;">YOUR PORTAL IS OPEN</h2>
               <p style="color: #4b5563; line-height: 1.6; font-size: 16px;">
                 Hello <strong>${record.recipient_name}</strong>, <br/>
-                ${record.buyer_name} has sent you a ZEYBOX gift! Your unique experience is attached as a PDF.
+                ${record.buyer_name} has sent you a ZEYBOX gift! Your unique experience code is <strong>${displayCode}</strong>.
               </p>
               <div style="margin: 30px 0; background-color: #f9fafb; border-radius: 30px; padding: 30px; text-align: left;">
                 <h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin-bottom: 15px;">How to Redeem:</h3>
                 <ol style="color: #4b5563; font-size: 14px; line-height: 1.8;">
-                  <li>Open the attached <strong>Zeybox_Voucher.pdf</strong>.</li>
                   <li>Go to <strong>zeybox.com/voucher</strong>.</li>
-                  <li>Enter your unique code to book your experience.</li>
+                  <li>Enter your code <strong>${displayCode}</strong>.</li>
+                  <li>Choose your preferred partner/location from the list.</li>
                 </ol>
               </div>
             </div>

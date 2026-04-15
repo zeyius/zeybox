@@ -16,7 +16,6 @@ type Experience = {
   title: string;
   description: string | null;
   city: string | null;
-  duration_minutes: number | null;
   price_dzd: number;
   partner: { name: string } | null;
 };
@@ -31,14 +30,13 @@ export default function BoxDetails() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
 
-  // Guest checkout UI state - UPDATED to include recipientEmail
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [buyerEmail, setBuyerEmail] = useState("");
   const [buyerName, setBuyerName] = useState("");
-  const [recipientEmail, setRecipientEmail] = useState(""); // Added
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
-  const [paymentReference] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -58,9 +56,9 @@ export default function BoxDetails() {
         .from("box_experiences")
         .select(`
           experiences:experience_id (
-            id, title, description, city, duration_minutes, price_dzd,
+            id, title, description, city, price_dzd,
             partner:partners ( name )
-          )
+          ) 
         `)
         .eq("box_id", id);
 
@@ -77,34 +75,68 @@ export default function BoxDetails() {
     load();
   }, [id]);
 
-  // Order Submission Logic
   const handleConfirmOrder = async () => {
     if (!buyerEmail || !buyerName) {
-        alert("Please fill in your details.");
-        return;
+      alert("Please fill in your details.");
+      return;
     }
 
     setBuying(true);
+
+    // ✅ Chargily → redirect automatique vers la page de paiement
+    if (paymentMethod === "EDAHABIA") {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-chargily-checkout`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              box_id: id,
+              buyer_name: buyerName,
+              buyer_email: buyerEmail,
+              recipient_name: recipientName,
+              recipient_email: recipientEmail,
+            }),
+          }
+        );
+        const data = await res.json();
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+        } else {
+          alert("Payment error. Please try again.");
+          setBuying(false);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Network error. Please try again.");
+        setBuying(false);
+      }
+      return;
+    }
+
+    // ✅ Cash / BaridiMob → flow manuel existant
     const { error } = await supabase
-        .from("orders")
-        .insert([{
-            buyer_name: buyerName,
-            buyer_email: buyerEmail,
-            recipient_name: recipientName,
-            recipient_email: recipientEmail, // Correctly linked to Supabase column
-            total_dzd: box?.price_dzd,
-            status: 'PENDING',
-            payment_method: paymentMethod,
-            payment_reference: paymentReference
-        }]);
+      .from("orders")
+      .insert([{
+        box_id: id,
+        buyer_name: buyerName,
+        buyer_email: buyerEmail,
+        recipient_name: recipientName,
+        recipient_email: recipientEmail,
+        total_dzd: box?.price_dzd,
+        status: 'PENDING',
+        payment_method: paymentMethod,
+        payment_reference: paymentReference,
+      }]);
 
     if (error) {
-        console.error(error);
-        alert("Error placing order.");
+      console.error(error);
+      alert("Error placing order.");
     } else {
-        setCheckoutOpen(false);
-        alert("Order placed successfully!");
-        navigate("/account");
+      setCheckoutOpen(false);
+      alert("Order placed successfully!");
+      navigate("/account");
     }
     setBuying(false);
   };
@@ -171,7 +203,6 @@ export default function BoxDetails() {
             </div>
 
             <div className="space-y-6">
-              {/* Info Sections */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="text-xs font-black uppercase tracking-widest text-gray-400">{t('label_buyer_email')}</label>
@@ -181,8 +212,7 @@ export default function BoxDetails() {
                   <label className="text-xs font-black uppercase tracking-widest text-gray-400">{t('label_buyer_name')}</label>
                   <input value={buyerName} onChange={(e) => setBuyerName(e.target.value)} className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none focus:ring-2 focus:ring-red-600/20" />
                 </div>
-                
-                {/* NEW RECIPIENT SECTION */}
+
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest text-gray-400">{t('label_recipient_name')}</label>
                   <input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none focus:ring-2 focus:ring-red-600/20" />
@@ -198,11 +228,39 @@ export default function BoxDetails() {
               {/* Payment Select */}
               <div>
                 <label className="text-xs font-black uppercase tracking-widest text-gray-400">{t('label_payment_method')}</label>
-                <select className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none font-bold" onChange={(e) => setPaymentMethod(e.target.value)}>
+                <select
+                  className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none font-bold"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
                   <option value="CASH">{i18n.language === 'en' ? 'Cash on Delivery' : 'دفع عند الاستلام'}</option>
                   <option value="BARIDPAY_QR">BaridiMob</option>
+                  <option value="EDAHABIA">💳 EDAHABIA (بريد الجزائر)</option>
+                  <option value="CIB">💳 CIB (carte bancaire)</option>
                 </select>
               </div>
+
+              {/* Référence manuelle uniquement pour BaridiMob */}
+              {paymentMethod === "BARIDPAY_QR" && (
+                <div>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400">{t('label_ref')}</label>
+                  <input
+                    value={paymentReference}
+                    onChange={(e) => setPaymentReference(e.target.value)}
+                    placeholder="Ex: 1234567890"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none focus:ring-2 focus:ring-red-600/20"
+                  />
+                </div>
+              )}
+
+              {/* Info Chargily */}
+              {(paymentMethod === "EDAHABIA" || paymentMethod === "CIB") && (
+                <div className="rounded-2xl bg-gray-50 px-5 py-4 text-sm text-gray-500">
+                  {i18n.language === 'en'
+                    ? '🔒 You will be redirected to a secure Chargily payment page.'
+                    : '🔒 سيتم تحويلك إلى صفحة دفع آمنة عبر Chargily.'}
+                </div>
+              )}
 
               {/* Confirm Button */}
               <button
@@ -218,4 +276,4 @@ export default function BoxDetails() {
       )}
     </main>
   );
-}
+} 
