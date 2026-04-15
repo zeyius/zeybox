@@ -150,7 +150,7 @@ export default function Home() {
                     transition-all duration-500 hover:border-yellow-400
                   `}>
                      <img 
-                      src={item.image} 
+                      src={item.image ?? undefined} 
                       alt={item.labelKey} 
                       className="w-32 md:w-44 object-contain mb-4 md:mb-6 animate-float drop-shadow-lg" 
                     />

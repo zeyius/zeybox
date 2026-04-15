@@ -1,11 +1,24 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+type VoucherBox = {
+  tier: string;
+  category: string;
+};
+
+type VoucherData = {
+  id: string;
+  voucher_code: string;
+  status: string;
+  orders: { recipient_name: string } | { recipient_name: string }[] | null;
+  boxes: VoucherBox | null;
+};
+
 export default function Voucher() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
-  const [voucherData, setVoucherData] = useState<any>(null);
+  const [voucherData, setVoucherData] = useState<VoucherData | null>(null);
   const [experiences, setExperiences] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -19,29 +32,16 @@ export default function Voucher() {
 
     const cleanCode = code.trim().toUpperCase().replace(/[–—]/g, '-');
 
-   const { data, error } = await supabase
-    .from("vouchers")
-    .select("id, voucher_code, status, orders ( recipient_name )")
-    .eq("voucher_code", cleanCode)
-    .maybeSingle();
-
-    console.log("data:", data);
-    console.log("error:", error);
-
-
     try {
-      // ✅ NEW: voucher -> box (tier + category)
       const { data: voucher, error: vError } = await supabase
         .from("vouchers")
-        .select(
-          `
+        .select(`
           id,
           voucher_code,
           status,
           orders ( recipient_name ),
           boxes:box_id ( tier, category )
-        `
-        )
+        `)
         .eq("voucher_code", cleanCode)
         .maybeSingle();
 
@@ -55,20 +55,20 @@ export default function Voucher() {
         return;
       }
 
-      // safety: ensure voucher has a box (your DB enforces NOT NULL now)
-      if (!voucher.boxes?.tier || !voucher.boxes?.category) {
+      const box = Array.isArray(voucher.boxes) ? voucher.boxes[0] : voucher.boxes;
+
+      if (!box?.tier || !box?.category) {
         setError("Voucher is missing box data. Please contact support.");
         return;
       }
 
-      setVoucherData(voucher);
+      setVoucherData({ ...voucher, boxes: box });
 
-      // ✅ NEW: fetch experiences by tier+category (NO prices selected)
       const { data: expData, error: eError } = await supabase
         .from("experiences")
         .select(`id, title, description, city, partners ( name )`)
-        .eq("tier", voucher.boxes.tier)
-        .eq("category", voucher.boxes.category)
+        .eq("tier", box.tier)
+        .eq("category", box.category)
         .eq("is_active", true);
 
       if (eError) throw eError;
@@ -81,9 +81,7 @@ export default function Voucher() {
     }
   };
 
-  // simple generator for partner-scan codes
   const genToken = () => {
-    // not cryptographically perfect, but fine for demo/prototype
     return Math.random().toString(36).slice(2, 10).toUpperCase() + "-" + Date.now().toString(36).toUpperCase();
   };
 
@@ -95,29 +93,25 @@ export default function Voucher() {
 
     setRedeeming(true);
     try {
-      // 1) Create redemption row (this is what you will use to email QR+code)
       const redeem_code = "RDM-" + genToken();
       const qr_token = "QR-" + genToken();
 
       const { error: redErr } = await supabase
         .from("voucher_redemptions")
-        .insert([
-          {
-            voucher_id: voucherData.id,
-            experience_id: experience.id,
-            redeem_code,
-            qr_token,
-            status: "ISSUED",
-          },
-        ]);
+        .insert([{
+          voucher_id: voucherData!.id,
+          experience_id: experience.id,
+          redeem_code,
+          qr_token,
+          status: "ISSUED",
+        }]);
 
       if (redErr) throw redErr;
 
-      // 2) Mark voucher as consumed (prevents choosing again)
       const { error: updateError } = await supabase
         .from("vouchers")
         .update({ status: "consumed" })
-        .eq("id", voucherData.id);
+        .eq("id", voucherData!.id);
 
       if (updateError) throw updateError;
 
@@ -134,19 +128,8 @@ export default function Voucher() {
     return (
       <main className="max-w-2xl mx-auto px-4 py-20 text-center">
         <div className="w-20 h-20 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl animate-bounce">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-10 w-10"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={4}
-              d="M5 13l4 4L19 7"
-            />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
           </svg>
         </div>
         <h1 className="text-4xl font-black uppercase italic">CONGRATS!</h1>
@@ -166,12 +149,8 @@ export default function Voucher() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-14">
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-black italic uppercase tracking-tighter">
-          ZEYBOX
-        </h1>
-        <p className="mt-2 text-gray-500 font-medium tracking-wide">
-          REDEMPTION PORTAL
-        </p>
+        <h1 className="text-4xl font-black italic uppercase tracking-tighter">ZEYBOX</h1>
+        <p className="mt-2 text-gray-500 font-medium tracking-wide">REDEMPTION PORTAL</p>
       </div>
 
       <div className="bg-white rounded-[40px] border border-gray-100 p-8 shadow-sm">
@@ -204,10 +183,8 @@ export default function Voucher() {
             <div className="flex flex-col md:flex-row justify-between items-center border-b border-gray-50 pb-8 mb-8 gap-4">
               <div className="text-center md:text-left">
                 <h2 className="text-3xl font-black uppercase italic">
-                  Welcome, {voucherData.orders?.recipient_name || "Guest"} 🎁
+                  Welcome, {(Array.isArray(voucherData.orders) ? voucherData.orders[0]?.recipient_name : voucherData.orders?.recipient_name) || "Guest"} 🎁
                 </h2>
-
-                {/* ✅ NEW: show tier/category from box, not voucher */}
                 <div className="flex gap-2 mt-2">
                   <span className="bg-black text-white text-[10px] font-black px-3 py-1 rounded-md uppercase tracking-widest">
                     {voucherData.boxes?.tier}
@@ -233,11 +210,8 @@ export default function Voucher() {
                       <h4 className="text-2xl font-black mt-1 uppercase leading-tight group-hover:italic transition-all">
                         {exp.title}
                       </h4>
-                      <p className="text-gray-500 text-sm mt-3 leading-relaxed">
-                        {exp.description}
-                      </p>
+                      <p className="text-gray-500 text-sm mt-3 leading-relaxed">{exp.description}</p>
                     </div>
-
                     <button
                       onClick={() => handleRedeem(exp)}
                       disabled={redeeming}
@@ -260,4 +234,4 @@ export default function Voucher() {
       </div>
     </main>
   );
-} 
+}
