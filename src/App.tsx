@@ -8,16 +8,20 @@ import Voucher from "./pages/Voucher";
 import Login from "./pages/Login";
 import BoxDetails from "./pages/BoxDetails";
 import Account from "./pages/Account";
-import AdminOrders from "./pages/AdminOrders";
-
+import AdminPartners from "./pages/AdminPartners";
+import PartnerScan from "./pages/PartnerScan";
 
 export default function App() {
   return (
     <Routes>
+      {/* Partner portal — standalone, no nav */}
+      <Route path="/partner/scan" element={<PartnerScan />} />
+
+      {/* Main site */}
       <Route element={<SiteLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/best-sellers" element={<BestSellers />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route path="/admin/partners" element={<AdminPartners />} />
         <Route path="/account" element={<Account />} />
         <Route path="/box/:id" element={<BoxDetails />} />
         <Route path="/gift-ideas" element={<GiftIdeas />} />

@@ -24,13 +24,12 @@ type Box = {
 // 1. Update the ORBIT_ITEMS to include the new visual icon
 const ORBIT_ITEMS = [
   { image: "/images/orbit1.png", emoji: null, labelKey: "Weekend", color: "bg-blue-50" },
-  { image: "images/orbit1.png", emoji: null, labelKey: "Restaurants", color: "bg-red-50" },
+  { image: "/images/orbit1.png", emoji: null, labelKey: "Restaurants", color: "bg-red-50" },
   { image: "/images/orbit1.png", emoji: null, labelKey: "Wellness", color: "white" },
   { image: "/images/orbit1.png", emoji: null, labelKey: "Adventure", color: "bg-orange-50" },
   { image: "/images/orbit1.png", emoji: null, labelKey: "Travel", color: "bg-yellow-50" },
   { image: "/images/orbit1.png", emoji: null, labelKey: "Event", color: "bg-purple-50" }, // Added Event
 ];
-
 // 2. Add 'Event' to your filtering array
 const CATEGORIES = ["Wellness", "Restaurants", "Adventure", "Weekend", "Travel", "Event"];
 
