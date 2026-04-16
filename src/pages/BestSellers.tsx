@@ -9,19 +9,38 @@ type Box = {
   description: string | null;
   validity_days: number;
   price_dzd: number;
+  category: string;
 };
+
+const CATEGORIES = [
+  { en: "All boxes", ar: "كل الصناديق", value: "All" },
+  { en: "Weekend", ar: "عطلة نهاية الأسبوع", value: "Weekend" },
+  { en: "Restaurant", ar: "مطاعم", value: "Restaurant" },
+  { en: "Wellness", ar: "عناية واسترخاء", value: "Wellness" },
+  { en: "Adventure", ar: "مغامرة", value: "Adventure" },
+  { en: "Event", ar: "فعاليات", value: "Event" },
+];
 
 export default function BestSellers() {
   const { t, i18n } = useTranslation();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedBudget, setSelectedBudget] = useState("All");
+
+  const BUDGETS = [
+    { label: "< 5000 DZD", value: "u5000", min: 0, max: 4999 },
+    { label: "5000–10000", value: "5k10k", min: 5000, max: 10000 },
+    { label: "10000–20000", value: "10k20k", min: 10000, max: 20000 },
+    { label: "20000+", value: "20k", min: 20000, max: Infinity },
+  ];
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("boxes")
-        .select("id,name,description,validity_days,price_dzd")
+        .select("id,name,description,validity_days,price_dzd,category")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
@@ -32,26 +51,33 @@ export default function BestSellers() {
     load();
   }, []);
 
+  const filteredBoxes = boxes
+    .filter((b) => selectedCategory === "All" || b.category === selectedCategory)
+    .filter((b) => {
+      if (selectedBudget === "All") return true;
+      const budget = BUDGETS.find((bu) => bu.value === selectedBudget);
+      return budget ? b.price_dzd >= budget.min && b.price_dzd <= budget.max : true;
+    });
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-6 md:py-10">
-      {/* Mobile-optimized Header */}
       <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
         {t('nav_best_sellers')}
       </h1>
 
-      {/* FIXED: Horizontal Scrollable Category Bar for Mobile */}
+      {/* Category filter bar */}
       <div className="mt-6 flex overflow-x-auto pb-2 gap-2 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
-        {["All boxes", "Weekend", "Restaurants", "Wellness", "Adventure"].map((cat) => (
+        {CATEGORIES.map((cat) => (
           <button
-            key={cat}
-            className="flex-none px-5 py-2 rounded-full border border-gray-200 text-sm font-medium hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all whitespace-nowrap active:scale-95"
+            key={cat.value}
+            onClick={() => setSelectedCategory(cat.value)}
+            className={`flex-none px-5 py-2 rounded-full border text-sm font-medium transition-all whitespace-nowrap active:scale-95 ${
+              selectedCategory === cat.value
+                ? "bg-black text-white border-black"
+                : "border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+            }`}
           >
-            {i18n.language === 'en' ? cat : (
-              cat === "All boxes" ? "كل الصناديق" :
-              cat === "Weekend" ? "عطلة نهاية الأسبوع" :
-              cat === "Restaurants" ? "مطاعم" :
-              cat === "Wellness" ? "عناية واسترخاء" : "مغامرة"
-            )}
+            {i18n.language === 'en' ? cat.en : cat.ar}
           </button>
         ))}
       </div>
@@ -64,10 +90,26 @@ export default function BestSellers() {
               <div className="font-bold text-gray-900">{t('filter_title')}</div>
               <div className="mt-4 space-y-3 text-sm text-gray-600">
                 <div className="font-semibold text-gray-400 uppercase text-[10px] tracking-widest">{t('filter_budget')}</div>
-                {["< 5000 DZD", "5000–10000", "10000–20000", "20000+"].map((b) => (
-                  <label key={b} className="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
-                    <span className="group-hover:text-black transition-colors">{b}</span>
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="radio" name="budget" value="All"
+                    checked={selectedBudget === "All"}
+                    onChange={() => setSelectedBudget("All")}
+                    className="w-4 h-4 text-red-600 focus:ring-red-500"
+                  />
+                  <span className="group-hover:text-black transition-colors">
+                    {i18n.language === 'en' ? 'All prices' : 'كل الأسعار'}
+                  </span>
+                </label>
+                {BUDGETS.map((b) => (
+                  <label key={b.value} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="radio" name="budget" value={b.value}
+                      checked={selectedBudget === b.value}
+                      onChange={() => setSelectedBudget(b.value)}
+                      className="w-4 h-4 text-red-600 focus:ring-red-500"
+                    />
+                    <span className="group-hover:text-black transition-colors">{b.label}</span>
                   </label>
                 ))}
               </div>
@@ -75,36 +117,43 @@ export default function BestSellers() {
           </div>
         </aside>
 
-        {/* Real boxes grid: FIXED for Mobile (2 columns) */}
+        {/* Boxes grid */}
         <section className="lg:col-span-9">
           {loading ? (
             <div className="flex justify-center py-20">
               <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ) : boxes.length === 0 ? (
-            <p className="text-gray-500 text-center py-10">{i18n.language === 'en' ? 'No boxes yet.' : 'لا توجد صناديق بعد.'}</p>
+          ) : filteredBoxes.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-400 font-bold text-lg">
+                {i18n.language === 'en' ? 'No boxes in this category.' : 'لا توجد صناديق في هذه الفئة.'}
+              </p>
+              <button
+                onClick={() => setSelectedCategory("All")}
+                className="mt-4 px-6 py-2 rounded-full bg-black text-white text-sm font-bold hover:bg-red-600 transition-all"
+              >
+                {i18n.language === 'en' ? 'See all boxes' : 'كل الصناديق'}
+              </button>
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6">
-              {boxes.map((b) => (
+              {filteredBoxes.map((b) => (
                 <div
                   key={b.id}
                   className="group relative rounded-2xl md:rounded-3xl border border-gray-100 p-3 md:p-5 transition-all duration-300 hover:shadow-2xl hover:border-yellow-400 bg-white flex flex-col"
                 >
-                  {/* Modern Red/Yellow Badge */}
                   <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-red-600 text-white text-[8px] md:text-[10px] font-black px-2 md:px-3 py-1 rounded-full uppercase tracking-tighter md:tracking-widest shadow-lg shadow-red-200">
                     {i18n.language === 'en' ? 'Hot' : 'ساخن'}
                   </div>
 
-                  {/* Box Image with Hover Animation */}
                   <div className="aspect-square rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center transition-colors group-hover:bg-yellow-50 overflow-hidden">
-                    <img 
-                      src="/images/box.png" 
-                      className="w-16 md:w-28 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" 
-                      alt={b.name} 
+                    <img
+                      src="/images/box.png"
+                      className="w-16 md:w-28 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6"
+                      alt={b.name}
                     />
                   </div>
 
-                  {/* Content scaled for Mobile */}
                   <div className="mt-3 flex-grow">
                     <h3 className="font-bold text-sm md:text-lg leading-tight group-hover:text-red-600 transition-colors line-clamp-1">
                       {b.name}
@@ -116,7 +165,7 @@ export default function BestSellers() {
 
                   <div className="mt-3 flex flex-col md:flex-row md:items-center justify-between gap-1">
                     <span className="text-[10px] md:text-xs text-gray-500 flex items-center gap-1 font-medium">
-                      <span className="text-yellow-500">★</span> 
+                      <span className="text-yellow-500">★</span>
                       {b.validity_days}d
                     </span>
                     <span className="font-black text-xs md:text-base text-black">

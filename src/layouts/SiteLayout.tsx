@@ -6,14 +6,13 @@ import { useTranslation } from "react-i18next";
 export default function SiteLayout() {
   const { t, i18n } = useTranslation();
   const [session, setSession] = useState<any>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
     });
-
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -21,6 +20,8 @@ export default function SiteLayout() {
     const newLang = i18n.language === "en" ? "ar" : "en";
     i18n.changeLanguage(newLang);
   };
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
@@ -30,26 +31,28 @@ export default function SiteLayout() {
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+
+          {/* Hamburger — mobile only */}
+          <button
+            className="lg:hidden flex flex-col justify-center gap-[5px] w-8 h-8 shrink-0"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Menu"
+          >
+            <span className={`block w-6 h-0.5 bg-black transition-all duration-300 origin-center ${menuOpen ? 'rotate-45 translate-y-[7px]' : ''}`} />
+            <span className={`block w-6 h-0.5 bg-black transition-all duration-300 ${menuOpen ? 'opacity-0' : ''}`} />
+            <span className={`block w-6 h-0.5 bg-black transition-all duration-300 origin-center ${menuOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
+          </button>
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
             <div className="h-9 w-9 rounded-xl bg-red-600 shadow-sm" />
             <span className="text-xl font-black tracking-tighter">ZEYBOX</span>
           </Link>
 
-          <div className="hidden md:flex flex-1">
-            <div className="w-full max-w-xl relative">
-              <input
-                className="w-full rounded-xl border border-gray-200 ps-4 pe-12 py-3 text-sm outline-none focus:ring-2 focus:ring-black transition-all"
-                placeholder={t('search_placeholder')}
-              />
-              <button className="absolute inset-y-2 end-2 px-3 rounded-lg bg-black text-white text-xs font-bold hover:bg-red-600 transition-colors">
-                {t('search_btn')}
-              </button>
-            </div>
-          </div>
-
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase tracking-widest">
+          {/* Nav links — desktop only */}
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase tracking-widest ms-6">
             <Link className="text-gray-500 hover:text-red-600 transition-colors" to="/best-sellers">
               {t('nav_best_sellers')}
             </Link>
@@ -58,9 +61,9 @@ export default function SiteLayout() {
             </Link>
           </nav>
 
+          {/* Right side actions */}
           <div className="flex items-center gap-3 ms-auto">
-            {/* Language Switcher */}
-            <button 
+            <button
               onClick={toggleLanguage}
               className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 hover:bg-gray-50 transition-all text-sm font-bold"
             >
@@ -95,6 +98,51 @@ export default function SiteLayout() {
           </div>
         </div>
       </header>
+
+      {/* Mobile drawer */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/50" onClick={closeMenu}>
+          <div
+            className="absolute top-0 left-0 h-full w-72 bg-white shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <span className="text-xs font-black uppercase tracking-widest text-gray-400">Menu</span>
+              <button onClick={closeMenu} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-black">✕</button>
+            </div>
+
+            <nav className="flex flex-col px-4 py-6 gap-1">
+              <Link to="/best-sellers" onClick={closeMenu} className="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50 transition-all">
+                🏆 {t('nav_best_sellers')}
+              </Link>
+              <Link to="/gift-ideas" onClick={closeMenu} className="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50 transition-all">
+                🎁 {t('nav_gift_ideas')}
+              </Link>
+              <Link to="/voucher" onClick={closeMenu} className="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50 transition-all">
+                🎟️ {t('nav_voucher')}
+              </Link>
+            </nav>
+
+            <div className="mx-6 border-t border-gray-100" />
+
+            <div className="flex flex-col px-4 py-6 gap-3 mt-auto">
+              <button onClick={toggleLanguage} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-100 font-bold text-sm hover:bg-gray-50 transition-all">
+                🌐 {i18n.language === "en" ? "العربية" : "English"}
+              </button>
+
+              {session ? (
+                <Link to="/account" onClick={closeMenu} className="px-5 py-3 rounded-2xl bg-black text-white text-sm font-bold text-center hover:bg-red-600 transition-all">
+                  {i18n.language === 'en' ? 'My Account' : 'حسابي'}
+                </Link>
+              ) : (
+                <Link to="/login" onClick={closeMenu} className="px-5 py-3 rounded-2xl bg-black text-white text-sm font-bold text-center hover:bg-red-600 transition-all">
+                  {i18n.language === 'en' ? 'Login' : 'دخول'}
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Outlet />
     </div>
