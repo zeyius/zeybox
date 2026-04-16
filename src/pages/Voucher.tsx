@@ -10,6 +10,7 @@ type VoucherData = {
   id: string;
   voucher_code: string;
   status: string;
+  box_id: string;
   orders: { recipient_name: string } | { recipient_name: string }[] | null;
   boxes: VoucherBox | null;
 };
@@ -39,6 +40,7 @@ export default function Voucher() {
           id,
           voucher_code,
           status,
+          box_id,
           orders ( recipient_name ),
           boxes:box_id ( tier, category )
         `)
@@ -64,15 +66,15 @@ export default function Voucher() {
 
       setVoucherData({ ...voucher, boxes: box });
 
+      // Fetch experiences via box_experiences (many-to-many)
       const { data: expData, error: eError } = await supabase
-        .from("experiences")
-        .select(`id, title, description, city, partners ( name )`)
-        .eq("tier", box.tier)
-        .eq("category", box.category)
-        .eq("is_active", true);
+        .from("box_experiences")
+        .select(`experiences:experience_id ( id, title, description, city, partners ( name ) )`)
+        .eq("box_id", voucher.box_id);
 
       if (eError) throw eError;
-      setExperiences(expData || []);
+      const mapped = (expData ?? []).map((row: any) => row.experiences).filter(Boolean);
+      setExperiences(mapped);
     } catch (err: any) {
       console.error(err);
       setError("Connection error. Try again.");
