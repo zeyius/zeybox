@@ -32,56 +32,33 @@ export default function AdminPartners() {
     const load = async () => {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from("voucher_redemptions")
-        .select(`
-          redeem_code,
-          status,
-          redeemed_at,
-          experiences:experience_id (
-            title,
-            partner_id,
-            partners ( id, name )
-          ),
-          vouchers:voucher_id (
-            orders ( recipient_name, buyer_name, total_dzd )
-          )
-        `)
-        .order("redeemed_at", { ascending: false });
+      const { data, error } = await supabase.rpc("get_partner_activity");
 
       if (error) { console.error(error); setLoading(false); return; }
 
-      // Build per-partner summaries
       const map: Record<string, PartnerSummary> = {};
 
       for (const row of data ?? []) {
-        const exp = row.experiences as any;
-        const partner = Array.isArray(exp?.partners) ? exp.partners[0] : exp?.partners;
-        const voucher = row.vouchers as any;
-        const order = Array.isArray(voucher?.orders) ? voucher.orders[0] : voucher?.orders;
-
-        const pid = partner?.id ?? "unknown";
-        const pname = partner?.name ?? "Unknown Partner";
-        const amount = Math.round((order?.total_dzd ?? 0) * 0.8);
-        const customer = order?.recipient_name || order?.buyer_name || "Guest";
+        const pid = row.partner_id ?? "unknown";
+        const pname = row.partner_name ?? "Unknown Partner";
 
         if (!map[pid]) {
           map[pid] = { partner_id: pid, partner_name: pname, total: 0, redeemed: 0, pending: 0, revenue_dzd: 0, redemptions: [] };
         }
 
         map[pid].total++;
-        if (row.status === "REDEEMED") { map[pid].redeemed++; map[pid].revenue_dzd += amount; }
+        if (row.status === "REDEEMED") { map[pid].redeemed++; map[pid].revenue_dzd += row.amount_dzd ?? 0; }
         if (row.status === "ISSUED") map[pid].pending++;
 
         map[pid].redemptions.push({
           redeem_code: row.redeem_code,
           status: row.status,
           redeemed_at: row.redeemed_at,
-          experience_title: exp?.title ?? "",
+          experience_title: row.experience_title,
           partner_name: pname,
           partner_id: pid,
-          customer_name: customer,
-          amount_dzd: amount,
+          customer_name: row.customer_name,
+          amount_dzd: row.amount_dzd ?? 0,
         });
       }
 
