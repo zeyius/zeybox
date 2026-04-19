@@ -70,7 +70,7 @@ export default function Login() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                placeholder={i18n.language === 'en' ? "Your name" : "اسمك الكامل"}
+                placeholder={t("label_full_name")}
                 required
               />
             </div>
@@ -107,7 +107,7 @@ export default function Login() {
             className="w-full rounded-xl bg-black text-white py-3 font-semibold hover:bg-red-600 transition disabled:opacity-60"
           >
             {loading
-              ? (i18n.language === 'en' ? "Please wait..." : "يرجى الانتظار...")
+              ? (t('loading'))
               : mode === "login" ? t('login_title') : t('signup_title')}
           </button>
         </form>
@@ -120,7 +120,7 @@ export default function Login() {
 
         <div className="mt-6 text-xs text-gray-500">
           {i18n.language === 'en' 
-            ? "By continuing you agree to ZEYBOX terms." 
+            ? t('have_account') ? t('have_account') : 'By continuing you agree to ZEYBOX terms.' 
             : "بالاستمرار ، فإنك توافق على شروط ZEYBOX."}
         </div>
       </div>

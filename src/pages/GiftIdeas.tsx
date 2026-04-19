@@ -88,7 +88,7 @@ export default function GiftIdeas() {
                 <div className="font-semibold text-gray-400 uppercase text-[10px] tracking-widest">{t('filter_budget')}</div>
                 <label className="flex items-center gap-3 cursor-pointer group">
                   <input type="radio" name="gift-budget" value="All" checked={selectedBudget === "All"} onChange={() => setSelectedBudget("All")} className="w-4 h-4 text-red-600 focus:ring-red-500" />
-                  <span className="group-hover:text-black transition-colors">{i18n.language === 'en' ? 'All prices' : 'كل الأسعار'}</span>
+                  <span className="group-hover:text-black transition-colors">{t('filter_all_prices')}</span>
                 </label>
                 {BUDGETS.map((b) => (
                   <label key={b.value} className="flex items-center gap-3 cursor-pointer group">
@@ -109,10 +109,10 @@ export default function GiftIdeas() {
           ) : filteredBoxes.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-400 font-bold text-lg">
-                {i18n.language === 'en' ? 'No boxes match your filters.' : 'لا توجد صناديق تطابق الفلاتر.'}
+                {t('no_boxes_filter')}
               </p>
               <button onClick={() => setSelectedBudget("All")} className="mt-4 px-6 py-2 rounded-full bg-black text-white text-sm font-bold hover:bg-red-600 transition-all">
-                {i18n.language === 'en' ? 'Reset filters' : 'إعادة الفلاتر'}
+                {t('reset_filters')}
               </button>
             </div>
           ) : (
@@ -121,7 +121,7 @@ export default function GiftIdeas() {
                 <div key={b.id} className="group rounded-2xl md:rounded-3xl border border-gray-100 p-3 md:p-5 transition-all duration-300 hover:shadow-2xl hover:border-yellow-400 bg-white flex flex-col">
                   <div className="aspect-square rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center transition-colors group-hover:bg-yellow-50 overflow-hidden">
                     {b.image_url ? (
-                      <img src={b.image_url} className="w-16 md:w-28 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" alt={b.name} loading="lazy" />
+                      <img src={b.image_url} className="w-28 md:w-38 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" alt={b.name} loading="lazy" />
                     ) : (
                       <span className="text-4xl md:text-6xl">
                         {b.category === "Wellness" ? "💆" :

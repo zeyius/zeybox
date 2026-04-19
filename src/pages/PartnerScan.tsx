@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "../lib/supabaseClient";
 
 type RedemptionInfo = {
@@ -14,6 +15,7 @@ type RedemptionInfo = {
 };
 
 export default function PartnerScan() {
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -52,12 +54,12 @@ export default function PartnerScan() {
       if (fetchError) throw fetchError;
 
       if (!data) {
-        setError("Code not found. Please check and try again.");
+        setError(t('partner_not_found'));
         return;
       }
 
       if (data.status === "REDEEMED") {
-        setError("This code has already been used.");
+        setError(t('partner_already_used'));
         return;
       }
 
@@ -83,7 +85,7 @@ export default function PartnerScan() {
       });
     } catch (err: any) {
       console.error(err);
-      setError("Connection error. Try again.");
+      setError(t('partner_connection_error'));
     } finally {
       setLoading(false);
     }
@@ -103,7 +105,7 @@ export default function PartnerScan() {
       setConfirmed(true);
     } catch (err: any) {
       console.error(err);
-      setError("Failed to confirm. Please try again.");
+      setError(t('partner_failed'));
     } finally {
       setConfirming(false);
     }
@@ -118,7 +120,7 @@ export default function PartnerScan() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-4xl font-black text-white uppercase italic mb-2">Confirmed!</h1>
+          <h1 className="text-4xl font-black text-white uppercase italic mb-2">{t('partner_confirmed')}</h1>
           <p className="text-gray-400 text-lg mb-2">{info?.customer_name}</p>
           <p className="text-yellow-400 font-bold text-xl">{info?.amount_dzd.toLocaleString()} DZD</p>
           <button
@@ -138,12 +140,12 @@ export default function PartnerScan() {
       <div className="border-b border-white/10 px-6 py-5 flex items-center gap-3">
         <div className="h-8 w-8 rounded-lg bg-red-600" />
         <span className="text-lg font-black tracking-tighter">ZEYBOX</span>
-        <span className="text-gray-500 text-sm font-medium ms-2">Partner Portal</span>
+        <span className="text-gray-500 text-sm font-medium ms-2">{t('partner_portal')}</span>
       </div>
 
       <div className="max-w-md mx-auto px-4 py-12">
-        <h1 className="text-3xl font-black uppercase italic mb-2">Scan Voucher</h1>
-        <p className="text-gray-400 mb-8">Enter the customer's redemption code to verify and confirm.</p>
+        <h1 className="text-3xl font-black uppercase italic mb-2">{t('partner_scan_title')}</h1>
+        <p className="text-gray-400 mb-8">{t('partner_scan_desc')}</p>
 
         {/* Input */}
         <div className="space-y-3">
@@ -159,7 +161,7 @@ export default function PartnerScan() {
             disabled={loading}
             className="w-full py-4 rounded-2xl bg-white text-black font-black uppercase tracking-widest hover:bg-yellow-400 transition-all disabled:opacity-30"
           >
-            {loading ? "Verifying..." : "Verify Code"}
+            {loading ? t('partner_verifying') : t('partner_verify')}
           </button>
         </div>
 
@@ -175,26 +177,26 @@ export default function PartnerScan() {
             {/* Status badge */}
             <div className="bg-green-500/10 border-b border-white/10 px-6 py-3 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-green-400 text-sm font-bold uppercase tracking-widest">Valid Voucher</span>
+              <span className="text-green-400 text-sm font-bold uppercase tracking-widest">{t('partner_valid')}</span>
             </div>
 
             <div className="p-6 space-y-5">
               {/* Customer */}
               <div>
-                <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Customer</p>
+                <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">{t('partner_customer')}</p>
                 <p className="text-2xl font-black">{info.customer_name}</p>
               </div>
 
               {/* Experience */}
               <div>
-                <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Experience</p>
+                <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">{t('partner_experience')}</p>
                 <p className="text-lg font-bold">{info.experience_title}</p>
                 <p className="text-gray-400 text-sm">{info.city}</p>
               </div>
 
               {/* Amount */}
               <div className="rounded-2xl bg-yellow-400/10 border border-yellow-400/20 px-5 py-4">
-                <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Amount to charge</p>
+                <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">{t('partner_amount')}</p>
                 <p className="text-3xl font-black text-yellow-400">{info.amount_dzd.toLocaleString()} <span className="text-lg">DZD</span></p>
               </div>
 
@@ -210,7 +212,7 @@ export default function PartnerScan() {
                 disabled={confirming}
                 className="w-full py-5 rounded-2xl bg-green-500 text-white font-black text-lg uppercase tracking-widest hover:bg-green-400 transition-all disabled:opacity-30 mt-2"
               >
-                {confirming ? "Confirming..." : "✓ Confirm Service Rendered"}
+                {confirming ? t('partner_confirming') : t('partner_confirm')}
               </button>
             </div>
           </div>

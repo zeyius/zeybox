@@ -62,7 +62,7 @@ export default function Enterprise() {
 
   const handleConfirmOrder = async () => {
     if (!buyerEmail || !buyerName || !companyName || !eventDate) {
-      alert(isAr ? "يرجى ملء جميع الحقول" : "Please fill in all fields.");
+      alert(t('fill_details'));
       return;
     }
 
@@ -89,12 +89,12 @@ export default function Enterprise() {
         if (data.checkout_url) {
           window.location.href = data.checkout_url;
         } else {
-          alert(isAr ? "خطأ في الدفع" : "Payment error. Please try again.");
+          alert(t('payment_error'));
           setBuying(false);
         }
       } catch (err) {
         console.error(err);
-        alert(isAr ? "خطأ في الاتصال" : "Network error. Please try again.");
+        alert(t('network_error'));
         setBuying(false);
       }
       return;
@@ -115,10 +115,10 @@ export default function Enterprise() {
 
     if (error) {
       console.error(error);
-      alert(isAr ? "حدث خطأ" : "Error placing order.");
+      alert(t('order_error'));
     } else {
       setCheckoutOpen(false);
-      alert(isAr ? "تم تقديم طلبك بنجاح!" : "Order placed successfully!");
+      alert(t('order_success'));
       navigate("/account");
     }
     setBuying(false);
@@ -131,7 +131,7 @@ export default function Enterprise() {
       <section className="max-w-7xl mx-auto px-4 py-16 md:py-24">
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 px-4 py-2 rounded-full mb-6 uppercase tracking-widest">
-            🏢 {isAr ? "للمؤسسات" : "Enterprise"}
+            🏢 {t('enterprise_badge')}
           </span>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight">
             {isAr ? (
@@ -185,7 +185,7 @@ export default function Enterprise() {
       <section className="bg-gray-50 py-16 rounded-t-[3rem]">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-3xl font-black uppercase tracking-tight italic mb-2">
-            {isAr ? "صناديق المجموعات" : "Group Boxes"}
+            {t('enterprise_group_boxes')}
           </h2>
           <div className="h-1.5 w-12 bg-yellow-400 rounded-full mb-10" />
 
@@ -198,18 +198,16 @@ export default function Enterprise() {
             <div className="text-center py-20 rounded-[3rem] border-2 border-dashed border-gray-200 bg-white">
               <div className="text-6xl mb-4">🏢</div>
               <h3 className="text-2xl font-black mb-2">
-                {isAr ? "قريباً!" : "Coming Soon!"}
+                {t('enterprise_coming_soon')}
               </h3>
               <p className="text-gray-400 max-w-md mx-auto">
-                {isAr
-                  ? "نحن نعمل على إعداد صناديق خاصة للمؤسسات. تواصل معنا للمزيد."
-                  : "We're preparing special enterprise boxes. Contact us for early access."}
+                {t('enterprise_coming_desc')}
               </p>
               <a
                 href="mailto:hello@zeybox.com"
                 className="mt-8 inline-flex px-8 py-4 rounded-2xl bg-black text-white font-black hover:bg-red-600 transition-all"
               >
-                {isAr ? "تواصل معنا" : "Contact us"}
+                {t('enterprise_contact')}
               </a>
             </div>
           ) : (
@@ -222,7 +220,7 @@ export default function Enterprise() {
                   {/* Capacity badge */}
                   {box.capacity && (
                     <div className="inline-flex items-center gap-2 bg-black text-white text-xs font-black px-3 py-1.5 rounded-full mb-6 w-fit">
-                      👥 {isAr ? `${box.capacity} أشخاص` : `${box.capacity} people`}
+                      👥 {`${box.capacity} ${t('enterprise_people')}`}
                     </div>
                   )}
 
@@ -242,14 +240,14 @@ export default function Enterprise() {
                     <div>
                       <p className="text-2xl font-black">{box.price_dzd.toLocaleString()} <span className="text-sm">DZD</span></p>
                       <p className="text-xs text-gray-400">
-                        {isAr ? `صالح ${box.validity_days} يوم` : `Valid ${box.validity_days} days`}
+                        {`${t('loading').replace('...','').trim() || 'Valid'} ${box.validity_days}d`}
                       </p>
                     </div>
                     <button
                       onClick={() => handleBuy(box)}
                       className="px-6 py-3 rounded-2xl bg-black text-white text-sm font-black hover:bg-red-600 transition-all active:scale-95"
                     >
-                      {isAr ? "اشترِ" : "Buy"}
+                      {t('btn_buy')}
                     </button>
                   </div>
                 </div>
@@ -280,7 +278,7 @@ export default function Enterprise() {
               {/* Company name */}
               <div>
                 <label className="text-xs font-black uppercase tracking-widest text-gray-400">
-                  {isAr ? "اسم المؤسسة *" : "Company name *"}
+                  {t('enterprise_company')}
                 </label>
                 <input
                   value={companyName}
@@ -294,7 +292,7 @@ export default function Enterprise() {
                 {/* Buyer name */}
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest text-gray-400">
-                    {isAr ? "اسمك *" : "Your name *"}
+                    {t('enterprise_your_name')}
                   </label>
                   <input
                     value={buyerName}
@@ -306,7 +304,7 @@ export default function Enterprise() {
                 {/* Buyer email */}
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest text-gray-400">
-                    {isAr ? "بريدك الإلكتروني *" : "Your email *"}
+                    {t('enterprise_your_email')}
                   </label>
                   <input
                     type="email"
@@ -320,7 +318,7 @@ export default function Enterprise() {
               {/* Event date */}
               <div>
                 <label className="text-xs font-black uppercase tracking-widest text-gray-400">
-                  {isAr ? "تاريخ الفعالية * (7 أيام على الأقل)" : "Event date * (min. 7 days from today)"}
+                  {t('enterprise_event_date')}
                 </label>
                 <input
                   type="date"
@@ -375,7 +373,7 @@ export default function Enterprise() {
               {/* Price summary */}
               <div className="rounded-2xl bg-black text-white px-6 py-5 flex items-center justify-between">
                 <span className="font-bold text-gray-400 text-sm">
-                  {isAr ? "المجموع" : "Total"}
+                  {t('enterprise_total')}
                 </span>
                 <span className="text-2xl font-black">
                   {selectedBox.price_dzd.toLocaleString()} DZD

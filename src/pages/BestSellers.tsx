@@ -99,7 +99,7 @@ export default function BestSellers() {
                     className="w-4 h-4 text-red-600 focus:ring-red-500"
                   />
                   <span className="group-hover:text-black transition-colors">
-                    {i18n.language === 'en' ? 'All prices' : 'كل الأسعار'}
+                    {t('filter_all_prices')}
                   </span>
                 </label>
                 {BUDGETS.map((b) => (
@@ -127,13 +127,13 @@ export default function BestSellers() {
           ) : filteredBoxes.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-400 font-bold text-lg">
-                {i18n.language === 'en' ? 'No boxes in this category.' : 'لا توجد صناديق في هذه الفئة.'}
+                {t('no_boxes_category')}
               </p>
               <button
                 onClick={() => setSelectedCategory("All")}
                 className="mt-4 px-6 py-2 rounded-full bg-black text-white text-sm font-bold hover:bg-red-600 transition-all"
               >
-                {i18n.language === 'en' ? 'See all boxes' : 'كل الصناديق'}
+                {t('see_all_boxes')}
               </button>
             </div>
           ) : (
@@ -144,12 +144,12 @@ export default function BestSellers() {
                   className="group relative rounded-2xl md:rounded-3xl border border-gray-100 p-3 md:p-5 transition-all duration-300 hover:shadow-2xl hover:border-yellow-400 bg-white flex flex-col"
                 >
                   <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-red-600 text-white text-[8px] md:text-[10px] font-black px-2 md:px-3 py-1 rounded-full uppercase tracking-tighter md:tracking-widest shadow-lg shadow-red-200">
-                    {i18n.language === 'en' ? 'Hot' : 'ساخن'}
+                    {t('label_new')}
                   </div>
 
                   <div className="aspect-square rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center transition-colors group-hover:bg-yellow-50 overflow-hidden">
                     {b.image_url ? (
-                      <img src={b.image_url} className="w-16 md:w-28 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" alt={b.name} loading="lazy" />
+                      <img src={b.image_url} className="w-28 md:w-38 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" alt={b.name} loading="lazy" />
                     ) : (
                       <span className="text-4xl md:text-6xl">
                         {b.category === "Wellness" ? "💆" :

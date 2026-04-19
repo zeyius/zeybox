@@ -147,7 +147,7 @@ export default function Home() {
                      <img 
                       src={item.image ?? undefined} 
                       alt={item.labelKey} 
-                      className="w-32 md:w-44 object-contain mb-4 md:mb-6 animate-float drop-shadow-lg" 
+                      className="w-36 md:w-44 object-contain mb-4 md:mb-6 animate-float drop-shadow-lg" 
                     />
                     <span className="text-[10px] md:text-sm font-black uppercase text-gray-700 tracking-[0.2em] text-center px-4">
                       {i18n.language === 'en' ? item.labelKey : (

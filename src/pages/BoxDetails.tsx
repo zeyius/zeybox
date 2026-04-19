@@ -154,21 +154,26 @@ export default function BoxDetails() {
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <section className="lg:col-span-7">
-          <div className="rounded-[2.5rem] border border-gray-100 p-8 bg-white shadow-sm">
-            <div className="h-64 rounded-3xl bg-gray-50 flex items-center justify-center overflow-hidden">
-              {box.image_url ? (
-                <img src={box.image_url} className="w-48 object-contain" alt={box.name} loading="lazy" />
-              ) : (
-                <span className="text-9xl">
-                  {box.category === "Wellness" ? "💆" :
-                   box.category === "Adventure" ? "🏔️" :
-                   box.category === "Restaurant" || box.category === "Restaurants" ? "🍽️" :
-                   box.category === "Weekend" ? "🏨" :
-                   box.category === "Event" ? "🎉" :
-                   box.category === "Enterprise" ? "🏢" : "🎁"}
-                </span>
-              )}
-            </div>
+          <div className="rounded-[2.5rem] border border-gray-100 px-8 pb-8 bg-white shadow-sm">
+            <div className="flex items-center justify-center py-8 md:py-12">
+            {box.image_url ? (
+              <img
+                src={box.image_url}
+                className="w-64 md:w-80 lg:w-96 object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-105"
+                alt={box.name}
+                loading="lazy"
+              />
+            ) : (
+              <span className="text-9xl">
+                {box.category === "Wellness" ? "💆" :
+                box.category === "Adventure" ? "🏔️" :
+                box.category === "Restaurant" || box.category === "Restaurants" ? "🍽️" :
+                box.category === "Weekend" ? "🏨" :
+                box.category === "Event" ? "🎉" :
+                box.category === "Enterprise" ? "🏢" : "🎁"}
+              </span>
+            )}
+          </div>
             <h1 className="mt-8 text-4xl font-black">{box.name}</h1>
             <p className="mt-4 text-gray-500 leading-relaxed text-lg">{box.description}</p>
           </div>

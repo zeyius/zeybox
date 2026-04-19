@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "../lib/supabaseClient";
 
 type VoucherBox = {
@@ -16,6 +17,7 @@ type VoucherData = {
 };
 
 export default function Voucher() {
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
@@ -49,18 +51,18 @@ export default function Voucher() {
 
       if (vError) throw vError;
       if (!voucher) {
-        setError("Invalid code. Please check your voucher.");
+        setError(t('voucher_invalid'));
         return;
       }
       if (voucher.status === "consumed") {
-        setError("This voucher has already been redeemed.");
+        setError(t('voucher_consumed'));
         return;
       }
 
       const box = Array.isArray(voucher.boxes) ? voucher.boxes[0] : voucher.boxes;
 
       if (!box?.tier || !box?.category) {
-        setError("Voucher is missing box data. Please contact support.");
+        setError(t('voucher_missing_data'));
         return;
       }
 
@@ -77,7 +79,7 @@ export default function Voucher() {
       setExperiences(mapped);
     } catch (err: any) {
       console.error(err);
-      setError("Connection error. Try again.");
+      setError(t('voucher_connection_error'));
     } finally {
       setLoading(false);
     }
@@ -89,7 +91,7 @@ export default function Voucher() {
 
   const handleRedeem = async (experience: any) => {
     const confirmChoice = window.confirm(
-      `Confirm your choice: ${experience.title}? This cannot be undone.`
+      t('voucher_confirm') + ': ' + experience.title + '?'
     );
     if (!confirmChoice) return;
 
@@ -120,7 +122,7 @@ export default function Voucher() {
       setSuccess(true);
     } catch (err) {
       console.error(err);
-      alert("Error redeeming voucher. Please contact support.");
+      alert(t('voucher_connection_error'));
     } finally {
       setRedeeming(false);
     }
@@ -134,9 +136,9 @@ export default function Voucher() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 className="text-4xl font-black uppercase italic">CONGRATS!</h1>
+        <h1 className="text-4xl font-black uppercase italic">{t('voucher_congrats')}</h1>
         <p className="text-gray-500 mt-4 text-lg">
-          Your experience is booked. We've sent the confirmation details to your email.
+          {t('voucher_booked')}
         </p>
         <button
           onClick={() => window.location.reload()}
@@ -152,7 +154,7 @@ export default function Voucher() {
     <main className="max-w-4xl mx-auto px-4 py-14">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-black italic uppercase tracking-tighter">ZEYBOX</h1>
-        <p className="mt-2 text-gray-500 font-medium tracking-wide">REDEMPTION PORTAL</p>
+        <p className="mt-2 text-gray-500 font-medium tracking-wide">{t('voucher_portal')}</p>
       </div>
 
       <div className="bg-white rounded-[40px] border border-gray-100 p-8 shadow-sm">
@@ -172,7 +174,7 @@ export default function Voucher() {
               disabled={loading}
               className="mt-6 w-full rounded-2xl bg-black text-white py-5 font-black uppercase tracking-widest hover:scale-[1.02] transition-all disabled:opacity-30"
             >
-              {loading ? "VERIFYING..." : "ACCESS EXPERIENCES"}
+              {loading ? t('voucher_verifying') : t('voucher_access_btn')}
             </button>
             {error && (
               <div className="mt-6 p-4 rounded-xl bg-red-50 text-red-600 text-center font-bold text-sm">
@@ -185,7 +187,7 @@ export default function Voucher() {
             <div className="flex flex-col md:flex-row justify-between items-center border-b border-gray-50 pb-8 mb-8 gap-4">
               <div className="text-center md:text-left">
                 <h2 className="text-3xl font-black uppercase italic">
-                  Welcome, {(Array.isArray(voucherData.orders) ? voucherData.orders[0]?.recipient_name : voucherData.orders?.recipient_name) || "Guest"} 🎁
+                  {t('voucher_welcome')}, {(Array.isArray(voucherData.orders) ? voucherData.orders[0]?.recipient_name : voucherData.orders?.recipient_name) || "Guest"} 🎁
                 </h2>
                 <div className="flex gap-2 mt-2">
                   <span className="bg-black text-white text-[10px] font-black px-3 py-1 rounded-md uppercase tracking-widest">
@@ -219,7 +221,7 @@ export default function Voucher() {
                       disabled={redeeming}
                       className="mt-8 w-full py-4 rounded-2xl bg-gray-900 text-white text-xs font-black uppercase tracking-widest hover:bg-black transition-all disabled:bg-gray-200"
                     >
-                      {redeeming ? "REDEEMING..." : "SELECT THIS GIFT"}
+                      {redeeming ? t('voucher_redeeming') : t('voucher_select_gift')}
                     </button>
                   </div>
                 ))
