@@ -9,6 +9,8 @@ type Box = {
   description: string | null;
   validity_days: number;
   price_dzd: number;
+  category: string;
+  image_url: string | null;
 };
 
 type Experience = {
@@ -45,7 +47,7 @@ export default function BoxDetails() {
 
       const { data: boxData, error: boxErr } = await supabase
         .from("boxes")
-        .select("id,name,description,validity_days,price_dzd")
+        .select("id,name,description,validity_days,price_dzd,category,image_url")
         .eq("id", id)
         .single();
 
@@ -154,7 +156,18 @@ export default function BoxDetails() {
         <section className="lg:col-span-7">
           <div className="rounded-[2.5rem] border border-gray-100 p-8 bg-white shadow-sm">
             <div className="h-64 rounded-3xl bg-gray-50 flex items-center justify-center overflow-hidden">
-              <img src="/images/box.png" className="w-48 animate-wonder-box" alt={box.name} />
+              {box.image_url ? (
+                <img src={box.image_url} className="w-48 object-contain" alt={box.name} loading="lazy" />
+              ) : (
+                <span className="text-9xl">
+                  {box.category === "Wellness" ? "💆" :
+                   box.category === "Adventure" ? "🏔️" :
+                   box.category === "Restaurant" || box.category === "Restaurants" ? "🍽️" :
+                   box.category === "Weekend" ? "🏨" :
+                   box.category === "Event" ? "🎉" :
+                   box.category === "Enterprise" ? "🏢" : "🎁"}
+                </span>
+              )}
             </div>
             <h1 className="mt-8 text-4xl font-black">{box.name}</h1>
             <p className="mt-4 text-gray-500 leading-relaxed text-lg">{box.description}</p>
@@ -276,4 +289,4 @@ export default function BoxDetails() {
       )}
     </main>
   );
-} 
+}

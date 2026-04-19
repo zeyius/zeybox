@@ -18,17 +18,18 @@ type Box = {
   description: string | null;
   validity_days: number;
   category: string;
-  tier: string; // Added tier to match database
+  tier: string;
+  image_url: string | null;
 };
 
 // 1. Update the ORBIT_ITEMS to include the new visual icon
 const ORBIT_ITEMS = [
-  { image: "/images/orbit1.png", emoji: null, labelKey: "Weekend", color: "bg-blue-50" },
-  { image: "/images/orbit1.png", emoji: null, labelKey: "Restaurants", color: "bg-red-50" },
-  { image: "/images/orbit1.png", emoji: null, labelKey: "Wellness", color: "white" },
-  { image: "/images/orbit1.png", emoji: null, labelKey: "Adventure", color: "bg-orange-50" },
-  { image: "/images/orbit1.png", emoji: null, labelKey: "Travel", color: "bg-yellow-50" },
-  { image: "/images/orbit1.png", emoji: null, labelKey: "Event", color: "bg-purple-50" }, // Added Event
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Weekend", color: "bg-blue-50" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Restaurants", color: "bg-red-50" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Wellness", color: "white" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Adventure", color: "bg-orange-50" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Travel", color: "bg-yellow-50" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Event", color: "bg-purple-50" }, // Added Event
 ];
 // 2. Add 'Event' to your filtering array
 const CATEGORIES = ["Wellness", "Restaurants", "Adventure", "Weekend", "Travel", "Event"];
@@ -51,7 +52,7 @@ export default function Home() {
       const { data } = await supabase
         .from("boxes")
         // FIXED: Added 'tier' to the selection
-        .select("id, name, price_dzd, description, validity_days, category, tier") 
+        .select("id, name, price_dzd, description, validity_days, category, tier, image_url") 
         .eq("is_active", true);
       setBoxes((data as Box[]) || []);
     };
@@ -78,7 +79,7 @@ export default function Home() {
             <SwiperSlide key={index}>
               <div className="relative w-full h-full">
                 <div className="absolute inset-0 bg-black/30 z-10" />
-                <img src={slide.image} alt="Zeybox" className="w-full h-full object-cover" />
+                <img src={slide.image} alt="Zeybox" className="w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
                   <h2 className="text-white text-3xl md:text-6xl font-black uppercase italic tracking-tighter drop-shadow-2xl">
                     {i18n.language === 'en' ? slide.titleEn : slide.titleAr}
@@ -202,7 +203,17 @@ export default function Home() {
                     <Link to={`/box/${b.id}`} key={b.id} className="min-w-[260px] md:min-w-[350px] snap-center group">
                       <div className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-8 transition-all duration-500 hover:shadow-xl hover:border-yellow-200 relative">
                         <div className="h-40 md:h-52 rounded-[2rem] bg-gray-50 flex items-center justify-center mb-6">
-                          <img src="/images/box.png" className="w-24 md:w-32 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6 drop-shadow-lg" alt={b.name} />
+                          {b.image_url ? (
+                            <img src={b.image_url} className="w-24 md:w-32 object-contain transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6 drop-shadow-lg" alt={b.name} loading="lazy" />
+                          ) : (
+                            <span className="text-5xl md:text-6xl">
+                              {b.category === "Wellness" ? "💆" :
+                               b.category === "Adventure" ? "🏔️" :
+                               b.category === "Restaurants" ? "🍽️" :
+                               b.category === "Weekend" ? "🏨" :
+                               b.category === "Event" ? "🎉" : "🎁"}
+                            </span>
+                          )}
                         </div>
                         <h4 className="font-bold text-lg md:text-xl text-black truncate">{b.name}</h4>
                         <div className="mt-6 flex items-center justify-between border-t border-gray-50 pt-4">

@@ -7,6 +7,7 @@ export default function SiteLayout() {
   const { t, i18n } = useTranslation();
   const [session, setSession] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const isAr = i18n.language === "ar";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -34,7 +35,6 @@ export default function SiteLayout() {
       <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
 
-          {/* Hamburger — mobile only */}
           <button
             className="lg:hidden flex flex-col justify-center gap-[5px] w-8 h-8 shrink-0"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -45,13 +45,11 @@ export default function SiteLayout() {
             <span className={`block w-6 h-0.5 bg-black transition-all duration-300 origin-center ${menuOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
           </button>
 
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
             <div className="h-9 w-9 rounded-xl bg-red-600 shadow-sm" />
             <span className="text-xl font-black tracking-tighter">ZEYBOX</span>
           </Link>
 
-          {/* Nav links — desktop only */}
           <nav className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase tracking-widest ms-6">
             <Link className="text-gray-500 hover:text-red-600 transition-colors" to="/best-sellers">
               {t('nav_best_sellers')}
@@ -59,9 +57,11 @@ export default function SiteLayout() {
             <Link className="text-gray-500 hover:text-red-600 transition-colors" to="/gift-ideas">
               {t('nav_gift_ideas')}
             </Link>
+            <Link to="/enterprise" className="text-gray-500 hover:text-red-600 transition-colors">
+              {isAr ? "للمؤسسات" : "Enterprise"}
+            </Link>
           </nav>
 
-          {/* Right side actions */}
           <div className="flex items-center gap-3 ms-auto">
             <button
               onClick={toggleLanguage}
@@ -73,39 +73,26 @@ export default function SiteLayout() {
               </span>
             </button>
 
-            <Link
-              to="/voucher"
-              className="hidden md:inline-flex px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 transition-all"
-            >
+            <Link to="/voucher" className="hidden md:inline-flex px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 transition-all">
               {t('nav_voucher')}
             </Link>
 
             {session ? (
-              <Link
-                to="/account"
-                className="px-5 py-2 rounded-xl bg-black text-white text-sm font-bold hover:bg-red-600 transition-all"
-              >
-                {i18n.language === 'en' ? 'Account' : 'حسابي'}
+              <Link to="/account" className="px-5 py-2 rounded-xl bg-black text-white text-sm font-bold hover:bg-red-600 transition-all">
+                {isAr ? 'حسابي' : 'Account'}
               </Link>
             ) : (
-              <Link
-                to="/login"
-                className="px-5 py-2 rounded-xl bg-black text-white text-sm font-bold hover:bg-red-600 transition-all"
-              >
-                {i18n.language === 'en' ? 'Login' : 'دخول'}
+              <Link to="/login" className="px-5 py-2 rounded-xl bg-black text-white text-sm font-bold hover:bg-red-600 transition-all">
+                {isAr ? 'دخول' : 'Login'}
               </Link>
             )}
           </div>
         </div>
       </header>
 
-      {/* Mobile drawer */}
       {menuOpen && (
         <div className="fixed inset-0 z-[60] bg-black/50" onClick={closeMenu}>
-          <div
-            className="absolute top-0 left-0 h-full w-72 bg-white shadow-2xl flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="absolute top-0 left-0 h-full w-72 bg-white shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <span className="text-xs font-black uppercase tracking-widest text-gray-400">Menu</span>
               <button onClick={closeMenu} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-black">✕</button>
@@ -121,6 +108,9 @@ export default function SiteLayout() {
               <Link to="/voucher" onClick={closeMenu} className="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50 transition-all">
                 🎟️ {t('nav_voucher')}
               </Link>
+              <Link to="/enterprise" onClick={closeMenu} className="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm uppercase tracking-widest bg-red-50 text-red-600 hover:bg-red-100 transition-all">
+                🏢 {isAr ? "للمؤسسات" : "Enterprise"}
+              </Link>
             </nav>
 
             <div className="mx-6 border-t border-gray-100" />
@@ -129,14 +119,13 @@ export default function SiteLayout() {
               <button onClick={toggleLanguage} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-100 font-bold text-sm hover:bg-gray-50 transition-all">
                 🌐 {i18n.language === "en" ? "العربية" : "English"}
               </button>
-
               {session ? (
                 <Link to="/account" onClick={closeMenu} className="px-5 py-3 rounded-2xl bg-black text-white text-sm font-bold text-center hover:bg-red-600 transition-all">
-                  {i18n.language === 'en' ? 'My Account' : 'حسابي'}
+                  {isAr ? 'حسابي' : 'My Account'}
                 </Link>
               ) : (
                 <Link to="/login" onClick={closeMenu} className="px-5 py-3 rounded-2xl bg-black text-white text-sm font-bold text-center hover:bg-red-600 transition-all">
-                  {i18n.language === 'en' ? 'Login' : 'دخول'}
+                  {isAr ? 'دخول' : 'Login'}
                 </Link>
               )}
             </div>

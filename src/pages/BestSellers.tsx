@@ -10,6 +10,7 @@ type Box = {
   validity_days: number;
   price_dzd: number;
   category: string;
+  image_url: string | null;
 };
 
 const CATEGORIES = [
@@ -40,7 +41,7 @@ export default function BestSellers() {
       setLoading(true);
       const { data, error } = await supabase
         .from("boxes")
-        .select("id,name,description,validity_days,price_dzd,category")
+        .select("id,name,description,validity_days,price_dzd,category,image_url")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
@@ -147,11 +148,17 @@ export default function BestSellers() {
                   </div>
 
                   <div className="aspect-square rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center transition-colors group-hover:bg-yellow-50 overflow-hidden">
-                    <img
-                      src="/images/box.png"
-                      className="w-16 md:w-28 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6"
-                      alt={b.name}
-                    />
+                    {b.image_url ? (
+                      <img src={b.image_url} className="w-16 md:w-28 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" alt={b.name} loading="lazy" />
+                    ) : (
+                      <span className="text-4xl md:text-6xl">
+                        {b.category === "Wellness" ? "💆" :
+                         b.category === "Adventure" ? "🏔️" :
+                         b.category === "Restaurant" || b.category === "Restaurants" ? "🍽️" :
+                         b.category === "Weekend" ? "🏨" :
+                         b.category === "Event" ? "🎉" : "🎁"}
+                      </span>
+                    )}
                   </div>
 
                   <div className="mt-3 flex-grow">
