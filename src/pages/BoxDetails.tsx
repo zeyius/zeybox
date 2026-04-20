@@ -86,7 +86,7 @@ export default function BoxDetails() {
     setBuying(true);
 
     // ✅ Chargily → redirect automatique vers la page de paiement
-    if (paymentMethod === "EDAHABIA") {
+    if (paymentMethod === "EDAHABIA" || paymentMethod === "CIB") {
       try {
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-chargily-checkout`,

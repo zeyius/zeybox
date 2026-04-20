@@ -36,10 +36,10 @@ const CATEGORIES = ["Wellness", "Restaurants", "Adventure", "Weekend", "Travel",
 
 
 const HERO_SLIDES = [
-  { image: "/images/hero1.png", titleEn: "Perfect Gift", titleAr: "هدية مثالية" },
-  { image: "/images/hero2.png", titleEn: "Memories", titleAr: "ذكريات" },
-  { image: "/images/hero3.png", titleEn: "For You", titleAr: "لك" },
-  { image: "/images/hero4.png", titleEn: "Algeria", titleAr: "الجزائر" }
+  { image: "/images/hero1.webp", titleEn: "Perfect Gift", titleAr: "هدية مثالية" },
+  { image: "/images/hero2.webp", titleEn: "Memories", titleAr: "ذكريات" },
+  { image: "/images/hero3.webp", titleEn: "For You", titleAr: "لك" },
+  { image: "/images/hero4.webp", titleEn: "Algeria", titleAr: "الجزائر" }
 ];
 
 export default function Home() {
