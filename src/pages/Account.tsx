@@ -51,7 +51,7 @@ export default function Account() {
         .eq("buyer_email", user.email)
         .order("created_at", { ascending: false });
 
-      setOrders((ordersData ?? []) as Order[]);
+      setOrders((ordersData ?? []) as unknown as Order[]);
       setLoading(false);
     };
     load();
