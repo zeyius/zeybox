@@ -25,7 +25,7 @@ export default function SiteLayout() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col">
       <div className="w-full bg-black text-white text-sm">
         <div className="max-w-7xl mx-auto px-4 py-2 text-center font-medium">
           {t('footer_text')}
@@ -133,7 +133,66 @@ export default function SiteLayout() {
         </div>
       )}
 
-      <Outlet />
+      <div className="flex-1">
+        <Outlet />
+      </div>
+
+      <footer className="bg-black text-white mt-auto">
+        <div className="max-w-7xl mx-auto px-4 py-10">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+
+            {/* Logo + desc */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-8 w-8 rounded-xl bg-red-600" />
+                <span className="font-black tracking-tighter text-lg">ZEYBOX</span>
+              </div>
+              <p className="text-gray-400 text-xs max-w-xs leading-relaxed">
+                {isAr
+                  ? "أول منصة هدايا تجارب في الجزائر. اشترِ، أرسل، استمتع."
+                  : "Algeria's first experience gift platform. Buy, send, enjoy."}
+              </p>
+            </div>
+
+            {/* Links */}
+            <div className="flex flex-col gap-2 text-sm">
+              <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-1">
+                {isAr ? "روابط" : "Links"}
+              </p>
+              <Link to="/best-sellers" className="text-gray-300 hover:text-white transition-colors">{t('nav_best_sellers')}</Link>
+              <Link to="/gift-ideas" className="text-gray-300 hover:text-white transition-colors">{t('nav_gift_ideas')}</Link>
+              <Link to="/enterprise" className="text-gray-300 hover:text-white transition-colors">{isAr ? "للمؤسسات" : "Enterprise"}</Link>
+              <Link to="/voucher" className="text-gray-300 hover:text-white transition-colors">{t('nav_voucher')}</Link>
+            </div>
+
+            {/* Contact */}
+            <div className="flex flex-col gap-2 text-sm">
+              <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-1">
+                {isAr ? "تواصل معنا" : "Contact"}
+              </p>
+              <a href="tel:0780259880" className="text-gray-300 hover:text-white transition-colors">
+                📞 0780 25 98 80
+              </a>
+              <a href="mailto:contact@zeybox.online" className="text-gray-300 hover:text-white transition-colors">
+                ✉️ contact@zeybox.online
+              </a>
+              <p className="text-gray-400 text-xs">
+                {isAr ? "أوقات العمل: 9ص — 6م" : "Available: 9AM — 6PM"}
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="border-t border-white/10 mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-2">
+            <p className="text-gray-500 text-xs">
+              © {new Date().getFullYear()} ZEYBOX. All rights reserved.
+            </p>
+            <p className="text-gray-500 text-xs">
+              {isAr ? "صُنع في الجزائر 🇩🇿" : "Made in Algeria 🇩🇿"}
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

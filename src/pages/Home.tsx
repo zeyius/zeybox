@@ -183,9 +183,6 @@ export default function Home() {
             return (
               <div key={cat} className="mb-16 last:mb-0">
                 <div className="flex items-center gap-3 mb-6">
-                  <span className="bg-red-600 text-white font-black text-[10px] px-3 py-1 rounded-md italic">
-                    {categoryBoxes[0].tier} {/* Shows SILVER/GOLD/DIAMOND badge */}
-                  </span>
                   <h3 className="text-xl md:text-2xl font-black text-gray-900 uppercase">
                     {i18n.language === 'en' ? cat : (
                         cat === "Wellness" ? "عناية واسترخاء" : 
