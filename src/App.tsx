@@ -10,12 +10,14 @@ import BoxDetails from "./pages/BoxDetails";
 import Account from "./pages/Account";
 import AdminPartners from "./pages/AdminPartners";
 import PartnerScan from "./pages/PartnerScan";
+import PartnerLogin from "./pages/PartnerLogin";
 
 export default function App() {
   return (
     <Routes>
       {/* Partner portal — standalone, no nav */}
       <Route path="/partner/scan" element={<PartnerScan />} />
+      <Route path="/partner/login" element={<PartnerLogin />} />
 
       {/* Main site */}
       <Route element={<SiteLayout />}>
