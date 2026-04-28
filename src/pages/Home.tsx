@@ -36,10 +36,10 @@ const CATEGORIES = ["Wellness", "Restaurants", "Adventure", "Weekend", "Travel",
 
 
 const HERO_SLIDES = [
-  { image: "/images/hero1.webp", titleEn: "Perfect Gift", titleAr: "هدية مثالية" },
-  { image: "/images/hero2.webp", titleEn: "Memories", titleAr: "ذكريات" },
-  { image: "/images/hero3.webp", titleEn: "For You", titleAr: "لك" },
-  { image: "/images/hero4.webp", titleEn: "Algeria", titleAr: "الجزائر" }
+  { image: "/images/hero1.png", titleEn: "Perfect Gift", titleAr: "هدية مثالية" },
+  { image: "/images/hero2.png", titleEn: "Memories", titleAr: "ذكريات" },
+  { image: "/images/hero3.png", titleEn: "For You", titleAr: "لك" },
+  { image: "/images/hero4.png", titleEn: "Algeria", titleAr: "الجزائر" }
 ];
 
 export default function Home() {
@@ -143,7 +143,7 @@ export default function Home() {
             >
               {ORBIT_ITEMS.map((item) => (
                 <SwiperSlide key={item.labelKey} style={{ width: '220px' }}>
-                <div className="w-full h-64 md:h-80 flex flex-col items-center justify-center">
+                <Link to={`/best-sellers?category=${item.labelKey}`} className="w-full h-64 md:h-80 flex flex-col items-center justify-center cursor-pointer">
                      <img 
                       src={item.image ?? undefined} 
                       alt={item.labelKey} 
@@ -157,7 +157,7 @@ export default function Home() {
                         item.labelKey === "Travel" ? "سفر" : "مغامرة"
                       )}
                     </span>
-                  </div>
+                  </Link>
                 </SwiperSlide>
               ))}
             </Swiper>
@@ -183,6 +183,9 @@ export default function Home() {
             return (
               <div key={cat} className="mb-16 last:mb-0">
                 <div className="flex items-center gap-3 mb-6">
+                  <span className="bg-red-600 text-white font-black text-[10px] px-3 py-1 rounded-md italic">
+                    {categoryBoxes[0].tier} {/* Shows SILVER/GOLD/DIAMOND badge */}
+                  </span>
                   <h3 className="text-xl md:text-2xl font-black text-gray-900 uppercase">
                     {i18n.language === 'en' ? cat : (
                         cat === "Wellness" ? "عناية واسترخاء" : 

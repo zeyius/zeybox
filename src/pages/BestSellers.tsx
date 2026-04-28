@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 type Box = {
@@ -29,12 +29,19 @@ export default function BestSellers() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedBudget, setSelectedBudget] = useState("All");
 
+  const [searchParams] = useSearchParams();
+
   const BUDGETS = [
     { label: "< 5000 DZD", value: "u5000", min: 0, max: 4999 },
     { label: "5000–10000", value: "5k10k", min: 5000, max: 10000 },
     { label: "10000–20000", value: "10k20k", min: 10000, max: 20000 },
     { label: "20000+", value: "20k", min: 20000, max: Infinity },
   ];
+
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat) setSelectedCategory(cat);
+  }, [searchParams]);
 
   useEffect(() => {
     const load = async () => {
@@ -99,7 +106,7 @@ export default function BestSellers() {
                     className="w-4 h-4 text-red-600 focus:ring-red-500"
                   />
                   <span className="group-hover:text-black transition-colors">
-                    {t('filter_all_prices')}
+                    {i18n.language === 'en' ? 'All prices' : 'كل الأسعار'}
                   </span>
                 </label>
                 {BUDGETS.map((b) => (
@@ -127,13 +134,13 @@ export default function BestSellers() {
           ) : filteredBoxes.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-400 font-bold text-lg">
-                {t('no_boxes_category')}
+                {i18n.language === 'en' ? 'No boxes in this category.' : 'لا توجد صناديق في هذه الفئة.'}
               </p>
               <button
                 onClick={() => setSelectedCategory("All")}
                 className="mt-4 px-6 py-2 rounded-full bg-black text-white text-sm font-bold hover:bg-red-600 transition-all"
               >
-                {t('see_all_boxes')}
+                {i18n.language === 'en' ? 'See all boxes' : 'كل الصناديق'}
               </button>
             </div>
           ) : (
@@ -144,7 +151,7 @@ export default function BestSellers() {
                   className="group relative rounded-2xl md:rounded-3xl border border-gray-100 p-3 md:p-5 transition-all duration-300 hover:shadow-2xl hover:border-yellow-400 bg-white flex flex-col"
                 >
                   <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-red-600 text-white text-[8px] md:text-[10px] font-black px-2 md:px-3 py-1 rounded-full uppercase tracking-tighter md:tracking-widest shadow-lg shadow-red-200">
-                    {t('label_new')}
+                    {i18n.language === 'en' ? 'Hot' : 'ساخن'}
                   </div>
 
                   <div className="aspect-square rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center transition-colors group-hover:bg-yellow-50 overflow-hidden">
