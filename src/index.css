@@ -79,3 +79,12 @@ html, body, #root {
   -webkit-box-reflect: below 15px linear-gradient(transparent, transparent, rgba(0,0,0,0.1));
   backface-visibility: hidden;
 }
+
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-scroll-left {
+  animation: scroll-left 17s linear infinite;
+  width: max-content;
+}

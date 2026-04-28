@@ -16,7 +16,7 @@ type Box = {
 const CATEGORIES = [
   { en: "All boxes", ar: "كل الصناديق", value: "All" },
   { en: "Weekend", ar: "عطلة نهاية الأسبوع", value: "Weekend" },
-  { en: "Restaurant", ar: "مطاعم", value: "Restaurant" },
+  { en: "Restaurants", ar: "مطاعم", value: "Restaurants" },
   { en: "Wellness", ar: "عناية واسترخاء", value: "Wellness" },
   { en: "Adventure", ar: "مغامرة", value: "Adventure" },
   { en: "Event", ar: "فعاليات", value: "Event" },

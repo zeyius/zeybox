@@ -47,7 +47,7 @@ const resources = {
       search_btn: "Search",
 
       // Footer
-      footer_text: "🎁 Unique QR voucher • 365 days validity • Algeria-wide partners",
+      footer_text: "🎁 Unique QR voucher • 90 days validity • Algeria-wide partners",
 
       // Checkout
       checkout_title: "Checkout",
@@ -211,7 +211,7 @@ const resources = {
       search_btn: "بحث",
 
       // Footer
-      footer_text: "🎁 قسيمة QR فريدة • صلاحية 365 يومًا • شركاء في جميع أنحاء الجزائر",
+      footer_text: "🎁 قسيمة QR فريدة • صلاحية 90 يومًا • شركاء في جميع أنحاء الجزائر",
 
       // Checkout
       checkout_title: "إتمام الشراء",
