@@ -256,11 +256,8 @@ export default function PartnerScan() {
       {/* Header */}
       <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-red-600" />
-          <div>
-            <span className="text-base font-black tracking-tighter">ZEYBOX</span>
-            <p className="text-gray-500 text-xs">{partnerName}</p>
-          </div>
+          <img src="/images/Logo.png" alt="ZEYBOX" className="h-12 w-auto" />
+          <p className="text-gray-500 text-xs">{partnerName}</p>
         </div>
         <div className="flex items-center gap-3">
           <button

@@ -59,8 +59,7 @@ export default function SiteLayout() {
           </button>
 
           <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
-            <div className="h-9 w-9 rounded-xl bg-red-600 shadow-sm" />
-            <span className="text-xl font-black tracking-tighter">ZEYBOX</span>
+            <img src="/images/Logo.png" alt="ZEYBOX" className="h-14 w-auto" />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase tracking-widest ms-6">
@@ -190,8 +189,7 @@ export default function SiteLayout() {
             {/* Logo + desc */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-8 w-8 rounded-xl bg-red-600" />
-                <span className="font-black tracking-tighter text-lg">ZEYBOX</span>
+                <img src="/images/Logo.png" alt="ZEYBOX" className="h-12 w-auto" />
               </div>
               <p className="text-gray-400 text-xs max-w-xs leading-relaxed">
                 {isAr

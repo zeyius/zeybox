@@ -44,8 +44,7 @@ export default function PartnerLogin() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center gap-2 justify-center mb-10">
-          <div className="h-9 w-9 rounded-xl bg-red-600" />
-          <span className="text-xl font-black tracking-tighter text-white">ZEYBOX</span>
+          <img src="/images/Logo.png" alt="ZEYBOX" className="h-14 w-auto" />
           <span className="text-gray-500 text-sm font-medium ms-1">Partner</span>
         </div>
 
