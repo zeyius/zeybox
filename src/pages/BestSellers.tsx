@@ -23,7 +23,7 @@ const CATEGORIES = [
 ];
 
 export default function BestSellers() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
