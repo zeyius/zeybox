@@ -167,6 +167,170 @@ const resources = {
       cat_travel: "Travel",
     }
   },
+  fr: {
+    translation: {
+      // Nav
+      nav_best_sellers: "Meilleures ventes",
+      nav_gift_ideas: "Idées cadeaux",
+      nav_voucher: "J'ai un bon cadeau",
+      nav_enterprise: "Entreprise",
+
+      // Hero
+      hero_badge: "✨ Offrez des expériences, conçu pour l'Algérie",
+      hero_title: "Offrez des souvenirs, pas seulement des choses.",
+      hero_desc: "Choisissez une ZEYBOX, envoyez un bon cadeau numérique et laissez-les réserver l'expérience de leurs rêves.",
+      btn_explore: "Explorer les coffrets",
+      section_collections: "Nos collections",
+
+      // Boxes
+      label_new: "NOUVEAU",
+      btn_view_box: "Voir le coffret",
+      btn_buy: "Acheter ce coffret",
+      included_experiences: "Expériences incluses",
+      starting_from: "À partir de",
+      loading: "Chargement...",
+      box_not_found: "Coffret introuvable",
+      back: "← Retour",
+
+      // Filters
+      filter_title: "Filtres",
+      filter_budget: "Budget",
+      filter_sort: "Trier",
+      filter_all_prices: "Tous les prix",
+      filter_all_boxes: "Tous les coffrets",
+      sort_newest: "Plus récent",
+      sort_price_low: "Prix : croissant",
+      sort_price_high: "Prix : décroissant",
+      no_boxes_category: "Aucun coffret dans cette catégorie.",
+      no_boxes_filter: "Aucun coffret ne correspond à vos filtres.",
+      see_all_boxes: "Voir tous les coffrets",
+      reset_filters: "Réinitialiser les filtres",
+
+      // Search
+      search_placeholder: "Rechercher des expériences...",
+      search_btn: "Rechercher",
+
+      // Footer
+      footer_text: "🎁 Bon QR unique • Validité 90 jours • Partenaires à travers l'Algérie",
+
+      // Checkout
+      checkout_title: "Paiement",
+      label_buyer_name: "Nom de l'acheteur",
+      label_buyer_email: "E-mail de l'acheteur *",
+      label_recipient_name: "Nom du destinataire",
+      label_recipient_email: "E-mail du destinataire",
+      label_payment_method: "Mode de paiement *",
+      label_ref: "Référence de transaction *",
+      btn_confirm_order: "Confirmer la commande",
+      payment_cash: "Paiement à la livraison",
+      payment_chargily_info: "🔒 Vous serez redirigé vers une page de paiement sécurisée Chargily.",
+      order_success: "Commande passée avec succès !",
+      order_error: "Erreur lors de la commande.",
+      payment_error: "Erreur de paiement. Veuillez réessayer.",
+      network_error: "Erreur réseau. Veuillez réessayer.",
+      fill_details: "Veuillez remplir vos informations.",
+
+      // Login
+      login_title: "Connexion",
+      signup_title: "Créer un compte",
+      login_desc: "Accédez à vos bons cadeaux, réservations et compte.",
+      signup_desc: "Créez votre compte ZEYBOX en quelques secondes.",
+      label_full_name: "Nom complet",
+      label_email: "E-mail",
+      label_password: "Mot de passe",
+      btn_login: "Se connecter",
+      btn_signup: "Créer un compte",
+      have_account: "Vous avez déjà un compte ?",
+      no_account: "Vous n'avez pas de compte ?",
+
+      // Account
+      account_title: "Mon compte",
+      btn_logout: "Se déconnecter",
+      signed_in_as: "Connecté en tant que",
+      profile_role: "Rôle",
+      my_orders_vouchers: "Mes commandes et bons",
+      no_orders: "Aucune commande pour l'instant.",
+      browse_boxes: "Parcourir les coffrets",
+      waiting_payment: "En attente de confirmation de paiement...",
+      use_voucher: "Utiliser →",
+      redeemed: "Utilisé",
+
+      // Voucher page
+      voucher_enter_code: "Entrez le code du bon",
+      voucher_access_btn: "Accéder aux expériences",
+      voucher_verifying: "Vérification...",
+      voucher_invalid: "Code invalide. Vérifiez votre bon.",
+      voucher_consumed: "Ce bon a déjà été utilisé.",
+      voucher_missing_data: "Le bon ne contient pas les données nécessaires. Contactez le support.",
+      voucher_connection_error: "Erreur de connexion. Réessayez.",
+      voucher_no_experiences: "Aucune expérience correspondante trouvée pour votre bon.",
+      voucher_select_gift: "Choisir ce cadeau",
+      voucher_redeeming: "Échange en cours...",
+      voucher_confirm: "Confirmez votre choix",
+      voucher_congrats: "Félicitations !",
+      voucher_booked: "Votre expérience est réservée. Nous avons envoyé les détails de confirmation à votre e-mail.",
+      voucher_finish: "Terminer",
+      voucher_portal: "Portail de remise",
+      voucher_welcome: "Bienvenue",
+
+      // Enterprise
+      enterprise_badge: "Entreprise",
+      enterprise_title_1: "Offrez à votre équipe",
+      enterprise_title_2: "une expérience inoubliable.",
+      enterprise_desc: "Choisissez le coffret groupe adapté à votre équipe, payez une fois et profitez ensemble le jour de votre choix — au moins 7 jours à l'avance.",
+      enterprise_step1_title: "Choisissez votre coffret",
+      enterprise_step1_desc: "Sélectionnez une expérience de groupe adaptée à la taille de votre équipe.",
+      enterprise_step2_title: "Réservez 7 jours à l'avance",
+      enterprise_step2_desc: "Choisissez la date de l'événement — minimum 1 semaine à l'avance.",
+      enterprise_step3_title: "Payez et recevez le bon",
+      enterprise_step3_desc: "Payez en ligne ou en espèces. Un seul bon pour toute l'équipe.",
+      enterprise_group_boxes: "Coffrets groupe",
+      enterprise_coming_soon: "Bientôt disponible !",
+      enterprise_coming_desc: "Nous préparons des coffrets spéciaux pour les entreprises. Contactez-nous pour un accès anticipé.",
+      enterprise_contact: "Contactez-nous",
+      enterprise_people: "personnes",
+      enterprise_company: "Nom de l'entreprise *",
+      enterprise_your_name: "Votre nom *",
+      enterprise_your_email: "Votre e-mail *",
+      enterprise_event_date: "Date de l'événement * (min. 7 jours à partir d'aujourd'hui)",
+      enterprise_total: "Total",
+
+      // Partner scan
+      partner_portal: "Portail partenaire",
+      partner_scan_title: "Scanner le bon",
+      partner_scan_desc: "Entrez le code d'échange du client pour vérifier et confirmer.",
+      partner_verify: "Vérifier le code",
+      partner_verifying: "Vérification...",
+      partner_not_found: "Code introuvable. Vérifiez et réessayez.",
+      partner_already_used: "Ce code a déjà été utilisé.",
+      partner_valid: "Bon valide",
+      partner_customer: "Client",
+      partner_experience: "Expérience",
+      partner_amount: "Montant à facturer",
+      partner_confirm: "✓ Confirmer le service rendu",
+      partner_confirming: "Confirmation en cours...",
+      partner_confirmed: "Confirmé !",
+      partner_scan_another: "Scanner un autre bon",
+      partner_connection_error: "Erreur de connexion. Réessayez.",
+      partner_failed: "Échec de la confirmation. Veuillez réessayer.",
+
+      // Gift ideas
+      gift_for_her: "Pour elle",
+      gift_for_him: "Pour lui",
+      gift_couple: "Couple",
+      gift_birthday: "Anniversaire",
+      gift_parents: "Parents",
+      gift_all: "Tout",
+
+      // Categories
+      cat_wellness: "Bien-être",
+      cat_adventure: "Aventure",
+      cat_restaurants: "Restaurants",
+      cat_weekend: "Week-end",
+      cat_event: "Événement",
+      cat_travel: "Voyage",
+    }
+  },
   ar: {
     translation: {
       // Nav

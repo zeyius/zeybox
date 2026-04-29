@@ -14,12 +14,12 @@ type Box = {
 };
 
 const OCCASIONS = [
-  { en: "All", ar: "الكل" },
-  { en: "For her", ar: "لها" },
-  { en: "For him", ar: "له" },
-  { en: "Couple", ar: "للمتزوجين" },
-  { en: "Birthday", ar: "عيد ميلاد" },
-  { en: "Parents", ar: "للوالدين" },
+  { tKey: "gift_all", value: "All" },
+  { tKey: "gift_for_her", value: "For her" },
+  { tKey: "gift_for_him", value: "For him" },
+  { tKey: "gift_couple", value: "Couple" },
+  { tKey: "gift_birthday", value: "Birthday" },
+  { tKey: "gift_parents", value: "Parents" },
 ];
 
 const BUDGETS = [
@@ -30,7 +30,7 @@ const BUDGETS = [
 ];
 
 export default function GiftIdeas() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState("All");
@@ -66,15 +66,15 @@ export default function GiftIdeas() {
       <div className="mt-6 flex overflow-x-auto pb-2 gap-2 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
         {OCCASIONS.map((o) => (
           <button
-            key={o.en}
-            onClick={() => setSelected(o.en)}
+            key={o.value}
+            onClick={() => setSelected(o.value)}
             className={`flex-none px-5 py-2 rounded-full border text-sm font-medium transition-all whitespace-nowrap active:scale-95 ${
-              selected === o.en
+              selected === o.value
                 ? "bg-black text-white border-black"
                 : "border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
             }`}
           >
-            {i18n.language === 'en' ? o.en : o.ar}
+            {t(o.tKey)}
           </button>
         ))}
       </div>

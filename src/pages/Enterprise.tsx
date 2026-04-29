@@ -15,9 +15,8 @@ type Box = {
 const MIN_DAYS_BEFORE = 7;
 
 export default function Enterprise() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const isAr = i18n.language === "ar";
 
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,48 +133,25 @@ export default function Enterprise() {
             🏢 {t('enterprise_badge')}
           </span>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight">
-            {isAr ? (
-              <>أهدِ فريقك<br /><span className="text-red-600 italic">تجربة لا تُنسى.</span></>
-            ) : (
-              <>Gift your team<br /><span className="text-red-600 italic">an unforgettable experience.</span></>
-            )}
+            {t('enterprise_title_1')}<br />
+            <span className="text-red-600 italic">{t('enterprise_title_2')}</span>
           </h1>
           <p className="mt-6 text-lg text-gray-500 leading-relaxed">
-            {isAr
-              ? "اختر صندوق المجموعة المناسب لفريقك، ادفع مرة واحدة، واستمتعوا معاً في اليوم الذي تختاره — قبل 7 أيام على الأقل."
-              : "Pick the right group box for your team, pay once, and enjoy together on the day of your choice — at least 7 days in advance."}
+            {t('enterprise_desc')}
           </p>
         </div>
 
         {/* How it works */}
         <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              step: "01",
-              en: "Choose your box",
-              ar: "اختر صندوقك",
-              desc_en: "Pick a group experience that fits your team size.",
-              desc_ar: "اختر تجربة جماعية تناسب حجم فريقك."
-            },
-            {
-              step: "02",
-              en: "Book 7 days ahead",
-              ar: "احجز قبل 7 أيام",
-              desc_en: "Select your event date — minimum 1 week in advance.",
-              desc_ar: "حدد تاريخ الفعالية — أسبوع كامل على الأقل."
-            },
-            {
-              step: "03",
-              en: "Pay & receive voucher",
-              ar: "ادفع واستلم القسيمة",
-              desc_en: "Pay online or cash. One voucher for your whole team.",
-              desc_ar: "ادفع إلكترونياً أو نقداً. قسيمة واحدة للفريق كله."
-            },
-          ].map((item) => (
+          {([
+            { step: "01", titleKey: "enterprise_step1_title", descKey: "enterprise_step1_desc" },
+            { step: "02", titleKey: "enterprise_step2_title", descKey: "enterprise_step2_desc" },
+            { step: "03", titleKey: "enterprise_step3_title", descKey: "enterprise_step3_desc" },
+          ] as const).map((item) => (
             <div key={item.step} className="rounded-3xl border border-gray-100 p-6 bg-white">
               <span className="text-4xl font-black text-gray-100">{item.step}</span>
-              <h3 className="mt-2 text-lg font-black">{isAr ? item.ar : item.en}</h3>
-              <p className="mt-2 text-sm text-gray-500">{isAr ? item.desc_ar : item.desc_en}</p>
+              <h3 className="mt-2 text-lg font-black">{t(item.titleKey)}</h3>
+              <p className="mt-2 text-sm text-gray-500">{t(item.descKey)}</p>
             </div>
           ))}
         </div>
@@ -264,7 +240,7 @@ export default function Enterprise() {
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h3 className="text-2xl font-black uppercase italic">
-                  {isAr ? "إتمام الشراء" : "Checkout"}
+                  {t('checkout_title')}
                 </h3>
                 <p className="text-sm text-gray-400 mt-1">{selectedBox.name}</p>
               </div>
@@ -283,7 +259,7 @@ export default function Enterprise() {
                 <input
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder={isAr ? "شركة الجزائر" : "Algérie Corp"}
+                  placeholder="Algérie Corp"
                   className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none focus:ring-2 focus:ring-red-600/20"
                 />
               </div>
@@ -332,14 +308,14 @@ export default function Enterprise() {
               {/* Payment method */}
               <div>
                 <label className="text-xs font-black uppercase tracking-widest text-gray-400">
-                  {isAr ? "طريقة الدفع *" : "Payment method *"}
+                  {t('label_payment_method')}
                 </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none font-bold"
                 >
-                  <option value="CASH">{isAr ? "دفع عند الاستلام" : "Cash on Delivery"}</option>
+                  <option value="CASH">{t('payment_cash')}</option>
                   <option value="BARIDPAY_QR">BaridiMob</option>
                   <option value="EDAHABIA">💳 EDAHABIA (بريد الجزائر)</option>
                   <option value="CIB">💳 CIB (carte bancaire)</option>
@@ -350,7 +326,7 @@ export default function Enterprise() {
               {paymentMethod === "BARIDPAY_QR" && (
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest text-gray-400">
-                    {isAr ? "رقم المرجع *" : "Transaction reference *"}
+                    {t('label_ref')}
                   </label>
                   <input
                     value={paymentReference}
@@ -364,9 +340,7 @@ export default function Enterprise() {
               {/* Chargily info */}
               {(paymentMethod === "EDAHABIA" || paymentMethod === "CIB") && (
                 <div className="rounded-2xl bg-gray-50 px-5 py-4 text-sm text-gray-500">
-                  {isAr
-                    ? "🔒 سيتم تحويلك إلى صفحة دفع آمنة عبر Chargily."
-                    : "🔒 You will be redirected to a secure Chargily payment page."}
+                  {t('payment_chargily_info')}
                 </div>
               )}
 
@@ -386,7 +360,7 @@ export default function Enterprise() {
                 onClick={handleConfirmOrder}
                 className="w-full py-5 rounded-2xl bg-black text-white font-black text-lg hover:bg-red-600 disabled:opacity-50 transition-all"
               >
-                {buying ? "..." : isAr ? "تأكيد الطلب" : "Confirm order"}
+                {buying ? "..." : t('btn_confirm_order')}
               </button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useTranslation } from "react-i18next";
 
@@ -7,6 +7,8 @@ export default function SiteLayout() {
   const { t, i18n } = useTranslation();
   const [session, setSession] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
   const isAr = i18n.language === "ar";
 
   useEffect(() => {
@@ -17,10 +19,21 @@ export default function SiteLayout() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === "en" ? "ar" : "en";
-    i18n.changeLanguage(newLang);
-  };
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const LANGUAGES = [
+    { code: "en", flag: "🇬🇧", label: "English" },
+    { code: "fr", flag: "🇫🇷", label: "Français" },
+    { code: "ar", flag: "🇩🇿", label: "العربية" },
+  ];
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -63,15 +76,35 @@ export default function SiteLayout() {
           </nav>
 
           <div className="flex items-center gap-3 ms-auto">
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 hover:bg-gray-50 transition-all text-sm font-bold"
-            >
-              <span className="text-base">🌐</span>
-              <span className="hidden sm:inline">
-                {i18n.language === "en" ? "العربية" : "English"}
-              </span>
-            </button>
+            <div className="relative" ref={langRef}>
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 hover:bg-gray-50 transition-all text-sm font-bold"
+              >
+                <span className="text-base">🌐</span>
+                <span className="hidden sm:inline">
+                  {LANGUAGES.find(l => l.code === i18n.language)?.label ?? "English"}
+                </span>
+                <span className="text-[10px] text-gray-400">▾</span>
+              </button>
+              {langOpen && (
+                <div className="absolute top-full mt-2 right-0 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-50 min-w-[140px]">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { i18n.changeLanguage(lang.code); setLangOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold hover:bg-gray-50 transition-colors ${
+                        i18n.language === lang.code ? "text-red-600 bg-red-50" : "text-gray-700"
+                      }`}
+                    >
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                      {i18n.language === lang.code && <span className="ms-auto">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <Link to="/voucher" className="hidden md:inline-flex px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 transition-all">
               {t('nav_voucher')}
@@ -116,9 +149,22 @@ export default function SiteLayout() {
             <div className="mx-6 border-t border-gray-100" />
 
             <div className="flex flex-col px-4 py-6 gap-3 mt-auto">
-              <button onClick={toggleLanguage} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-100 font-bold text-sm hover:bg-gray-50 transition-all">
-                🌐 {i18n.language === "en" ? "العربية" : "English"}
-              </button>
+              <div className="flex gap-2">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => i18n.changeLanguage(lang.code)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl border text-sm font-bold transition-all ${
+                      i18n.language === lang.code
+                        ? "bg-black text-white border-black"
+                        : "border-gray-100 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span>{lang.flag}</span>
+                    <span>{lang.label}</span>
+                  </button>
+                ))}
+              </div>
               {session ? (
                 <Link to="/account" onClick={closeMenu} className="px-5 py-3 rounded-2xl bg-black text-white text-sm font-bold text-center hover:bg-red-600 transition-all">
                   {isAr ? 'حسابي' : 'My Account'}

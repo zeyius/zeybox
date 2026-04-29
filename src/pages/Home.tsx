@@ -1,3 +1,5 @@
+
+
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { Link } from "react-router-dom";
@@ -22,22 +24,28 @@ type Box = {
   image_url: string | null;
 };
 
+type Partner = {
+  id: string;
+  name: string;
+  city: string | null;
+};
+
 const ORBIT_ITEMS = [
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Weekend", color: "bg-blue-50" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Restaurants", color: "bg-red-50" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Wellness", color: "white" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Adventure", color: "bg-orange-50" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Travel", color: "bg-yellow-50" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Event", color: "bg-purple-50" }, 
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Weekend", labelFr: "Week-end", labelAr: "عطلة", color: "bg-blue-50" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Restaurants", labelFr: "Restaurants", labelAr: "مطاعم", color: "bg-red-50" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Wellness", labelFr: "Bien-être", labelAr: "استرخاء", color: "white" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Adventure", labelFr: "Aventure", labelAr: "مغامرة", color: "bg-orange-50" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Travel", labelFr: "Voyage", labelAr: "سفر", color: "bg-yellow-50" },
+  { image: "/images/orbit4.png", emoji: null, labelKey: "Event", labelFr: "Événements", labelAr: "فعاليات", color: "bg-purple-50" },
 ];
 
 const CATEGORIES = ["Wellness", "Restaurants", "Adventure", "Weekend", "Travel", "Event"];
 
 const HERO_SLIDES = [
-  { image: "/images/hero1.webp", titleEn: "Perfect Gift", titleAr: "هدية مثالية",},
-  { image: "/images/hero2.webp", titleEn: "Memories", titleAr: "ذكريات" },
-  { image: "/images/hero3.webp", titleEn: "For You", titleAr: "لك" },
-  { image: "/images/hero4.webp", titleEn: "Algeria", titleAr: "الجزائر" }
+  { image: "/images/hero1.webp", titleEn: "Perfect Gift", titleFr: "Cadeau Parfait", titleAr: "هدية مثالية" },
+  { image: "/images/hero2.webp", titleEn: "Memories", titleFr: "Souvenirs", titleAr: "ذكريات" },
+  { image: "/images/hero3.webp", titleEn: "For You", titleFr: "Pour Vous", titleAr: "لك" },
+  { image: "/images/hero4.webp", titleEn: "Algeria", titleFr: "Algérie", titleAr: "الجزائر" },
 ];
 
 const HOW_IT_WORKS = [
@@ -45,49 +53,50 @@ const HOW_IT_WORKS = [
     step: "01",
     emoji: "🎁",
     en: { title: "Choose a box", desc: "Browse our curated experience boxes by category and budget." },
+    fr: { title: "Choisissez un coffret", desc: "Parcourez nos coffrets d'expériences par catégorie et budget." },
     ar: { title: "اختر صندوقك", desc: "تصفح صناديق التجارب حسب الفئة والميزانية." },
   },
   {
     step: "02",
     emoji: "📩",
     en: { title: "Receive your voucher", desc: "Pay securely and instantly receive a digital voucher by email or phone number." },
+    fr: { title: "Recevez votre bon", desc: "Payez en toute sécurité et recevez instantanément un bon numérique par e-mail ou numéro de téléphone." },
     ar: { title: "استلم القسيمة", desc: "ادفع بأمان واستلم قسيمتك الرقمية فوراً عبر البريد الإلكتروني أو رقم الهاتف." },
   },
   {
     step: "03",
     emoji: "✨",
     en: { title: "Live the experience", desc: "Choose your spot, book your date, and enjoy your unique experience." },
+    fr: { title: "Vivez l'expérience", desc: "Choisissez votre lieu, réservez votre date et profitez de votre expérience unique." },
     ar: { title: "عش التجربة", desc: "اختر مكانك، احجز يومك، واستمتع بتجربة لا تُنسى." },
   },
 ];
 
-const PARTNERS = [
-  { name: "Lynatel Palace", emoji: "🏨", city: "Ouargla" },
-  { name: "Desert Safari Tours", emoji: "🏜️", city: "Ouargla" },
-  { name: "Hotel El-Moudjahid", emoji: "🏩", city: "Ouargla" },
-  { name: "Le Petit Oasis", emoji: "🌿", city: "Ouargla" },
-  { name: "Hotel Zaid", emoji: "🏪", city: "Ouargla" },
-  { name: "Spa & Hammam Nour", emoji: "💆", city: "Ouargla" },
-  { name: "Ijdagh Tour Sahara", emoji: "🐪", city: "Ouargla" },
-  { name: "Restaurant El Waha", emoji: "🍽️", city: "Ouargla" },
-];
 
 export default function Home() {
   const { t, i18n } = useTranslation();
   const [boxes, setBoxes] = useState<Box[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
   const explorerRef = useRef<HTMLDivElement>(null);
   const isAr = i18n.language === "ar";
 
   useEffect(() => {
-    const loadBoxes = async () => {
-      const { data } = await supabase
-        .from("boxes")
-        .select("id, name, price_dzd, description, validity_days, category, tier, image_url")
-        .eq("is_active", true)
-        .limit(20);
-      setBoxes((data as Box[]) || []);
+    const loadData = async () => {
+      const [{ data: boxData }, { data: partnerData }] = await Promise.all([
+        supabase
+          .from("boxes")
+          .select("id, name, price_dzd, description, validity_days, category, tier, image_url")
+          .eq("is_active", true)
+          .limit(20),
+        supabase
+          .from("partners")
+          .select("id, name, city")
+          .order("name"),
+      ]);
+      setBoxes((boxData as Box[]) || []);
+      setPartners((partnerData as Partner[]) || []);
     };
-    loadBoxes();
+    loadData();
   }, []);
 
   const scrollToExplorer = () => {
@@ -113,7 +122,7 @@ export default function Home() {
                 <img src={slide.image} alt="Zeybox" className="w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
                   <h2 className="text-white text-3xl md:text-6xl font-black uppercase italic tracking-tighter drop-shadow-2xl">
-                    {isAr ? slide.titleAr : slide.titleEn}
+                    {i18n.language === 'ar' ? slide.titleAr : i18n.language === 'fr' ? slide.titleFr : slide.titleEn}
                   </h2>
                   <div className="mt-4 h-1 w-16 md:w-24 bg-yellow-400 rounded-full shadow-lg animate-pulse" />
                 </div>
@@ -131,8 +140,10 @@ export default function Home() {
               {t('hero_badge')}
             </p>
             <h1 className="text-4xl md:text-7xl font-black leading-tight tracking-tight text-black">
-              {isAr ? (
+              {i18n.language === 'ar' ? (
                 <>أهدِ ذكريات، <br /><span className="text-red-600 italic">ليس مجرد أشياء.</span></>
+              ) : i18n.language === 'fr' ? (
+                <>Offrez des souvenirs, <br /><span className="text-red-600 italic">pas juste des choses.</span></>
               ) : (
                 <>Gift memories, <br /><span className="text-red-600 italic">not just things.</span></>
               )}
@@ -175,13 +186,7 @@ export default function Home() {
                     className="w-36 md:w-44 object-contain mb-4 md:mb-6 animate-float drop-shadow-lg"
                   />
                     <span className="text-[10px] md:text-sm font-black uppercase text-gray-700 tracking-[0.2em] text-center px-4">
-                      {isAr ? (
-                        item.labelKey === "Weekend" ? "عطلة" :
-                        item.labelKey === "Restaurants" ? "مطاعم" :
-                        item.labelKey === "Wellness" ? "استرخاء" :
-                        item.labelKey === "Travel" ? "سفر" :
-                        item.labelKey === "Event" ? "فعاليات" : "مغامرة"
-                      ) : item.labelKey}
+                      {i18n.language === 'ar' ? item.labelAr : i18n.language === 'fr' ? item.labelFr : item.labelKey}
                     </span>
                   </Link>
                 </SwiperSlide>
@@ -195,7 +200,7 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 pb-20">
         <div className="mb-10">
           <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic">
-            {isAr ? "كيف يعمل" : "How it works"}
+            {i18n.language === 'ar' ? "كيف يعمل" : i18n.language === 'fr' ? "Comment ça marche" : "How it works"}
           </h2>
           <div className="h-1.5 w-16 bg-yellow-400 mt-2 rounded-full" />
         </div>
@@ -207,8 +212,8 @@ export default function Home() {
               <span className="text-2xl">{item.emoji}</span>
             </div>
             <div>
-              <h3 className="text-sm font-black">{isAr ? item.ar.title : item.en.title}</h3>
-              <p className="text-gray-500 text-xs leading-relaxed mt-0.5">{isAr ? item.ar.desc : item.en.desc}</p>
+              <h3 className="text-sm font-black">{i18n.language === 'ar' ? item.ar.title : i18n.language === 'fr' ? item.fr.title : item.en.title}</h3>
+              <p className="text-gray-500 text-xs leading-relaxed mt-0.5">{i18n.language === 'ar' ? item.ar.desc : i18n.language === 'fr' ? item.fr.desc : item.en.desc}</p>
             </div>
           </div>
         ))}
@@ -233,19 +238,25 @@ export default function Home() {
               <div key={cat} className="mb-16 last:mb-0">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl md:text-2xl font-black text-gray-900 uppercase">
-                    {isAr ? (
+                    {i18n.language === 'ar' ? (
                       cat === "Wellness" ? "عناية واسترخاء" :
                       cat === "Restaurants" ? "مطاعم فاخرة" :
                       cat === "Adventure" ? "مغامرات" :
                       cat === "Weekend" ? "عطلة نهاية الأسبوع" :
                       cat === "Travel" ? "سفر ورحلات" : "فعاليات ومناسبات"
+                    ) : i18n.language === 'fr' ? (
+                      cat === "Wellness" ? "Bien-être" :
+                      cat === "Restaurants" ? "Restaurants" :
+                      cat === "Adventure" ? "Aventure" :
+                      cat === "Weekend" ? "Week-end" :
+                      cat === "Travel" ? "Voyage" : "Événements"
                     ) : cat}
                   </h3>
                   <Link
                     to={`/best-sellers?category=${cat}`}
                     className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors"
                   >
-                    {isAr ? "عرض الكل ←" : "See all →"}
+                    {i18n.language === 'ar' ? "عرض الكل ←" : i18n.language === 'fr' ? "Voir tout →" : "See all →"}
                   </Link>
                 </div>
 
@@ -290,42 +301,43 @@ export default function Home() {
   <div className="max-w-7xl mx-auto px-4">
     <div className="mb-10">
       <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic">
-        {isAr ? "شركاؤنا" : "Our Partners"}
+        {i18n.language === 'ar' ? "شركاؤنا" : i18n.language === 'fr' ? "Nos Partenaires" : "Our Partners"}
       </h2>
       <div className="h-1.5 w-16 bg-yellow-400 mt-2 rounded-full" />
       <p className="mt-4 text-gray-400 text-sm">
-        {isAr ? "أماكن مختارة بعناية في ولاية ورقلة" : "Carefully selected venues across Ouargla"}
+        {i18n.language === 'ar' ? "أماكن مختارة بعناية في ولاية ورقلة" : i18n.language === 'fr' ? "Lieux soigneusement sélectionnés à Ouargla" : "Carefully selected venues across Ouargla"}
       </p>
     </div>
 
-      <div className="overflow-hidden">
-      <div className="flex gap-4 animate-scroll-left">
-        {[...PARTNERS, ...PARTNERS].map((p, i) => (
-          <div key={i} className="flex-none flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3">
-            <span className="text-2xl">{p.emoji}</span>
-            <p className="font-black text-sm whitespace-nowrap">{p.name}</p>
+      <div className="overflow-hidden" dir="ltr">
+        {partners.length > 0 && (
+          <div key={partners.length} className="flex gap-4 animate-scroll-left">
+            {[...partners, ...partners].map((p, i) => (
+              <div key={i} className="flex-none flex items-center bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3">
+                <p className="font-black text-sm whitespace-nowrap">{p.name}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
-    </div>
 
           {/* Stats bar */}
           <div className="mt-12 rounded-[2.5rem] bg-black text-white p-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
               <p className="text-3xl md:text-4xl font-black text-yellow-400">X+</p>
-              <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{isAr ? "شريك" : "Partners"}</p>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{i18n.language === 'ar' ? "شريك" : i18n.language === 'fr' ? "Partenaires" : "Partners"}</p>
             </div>
             <div>
               <p className="text-3xl md:text-4xl font-black text-yellow-400">X+</p>
-              <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{isAr ? "تجربة" : "Experiences"}</p>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{i18n.language === 'ar' ? "تجربة" : i18n.language === 'fr' ? "Expériences" : "Experiences"}</p>
             </div>
             <div>
               <p className="text-3xl md:text-4xl font-black text-yellow-400">90</p>
-              <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{isAr ? "يوم صلاحية" : "Days validity"}</p>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{i18n.language === 'ar' ? "يوم صلاحية" : i18n.language === 'fr' ? "Jours validité" : "Days validity"}</p>
             </div>
             <div>
               <p className="text-3xl md:text-4xl font-black text-yellow-400">100%</p>
-              <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{isAr ? "جزائري" : "Algerian"}</p>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{i18n.language === 'ar' ? "جزائري" : i18n.language === 'fr' ? "Algérien" : "Algerian"}</p>
             </div>
           </div>
         </div>
