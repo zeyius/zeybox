@@ -11,6 +11,9 @@ type RedemptionInfo = {
   partner_name: string;
   city: string;
   amount_dzd: number;
+  voucher_id: string;
+  max_uses: number | null;
+  uses_count: number;
 };
 
 type HistoryItem = {
@@ -162,19 +165,27 @@ export default function PartnerScan() {
         .select(`
           id, redeem_code, qr_token, status,
           experiences:experience_id ( title, city, partners ( name ) ),
-          vouchers:voucher_id ( orders ( recipient_name, buyer_name, total_dzd ) )
+          vouchers:voucher_id ( id, uses_count, orders ( recipient_name, buyer_name, total_dzd ), boxes:box_id ( max_uses ) )
         `)
         .eq("redeem_code", cleanCode)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
       if (!data) { setError("Code introuvable. Vérifiez et réessayez."); setLoading(false); return; }
-      if (data.status === "REDEEMED") { setError("Ce code a déjà été utilisé."); setLoading(false); return; }
 
       const experience = data.experiences as any;
       const partner = Array.isArray(experience?.partners) ? experience.partners[0] : experience?.partners;
       const voucher = data.vouchers as any;
       const order = Array.isArray(voucher?.orders) ? voucher.orders[0] : voucher?.orders;
+      const boxes = Array.isArray(voucher?.boxes) ? voucher.boxes[0] : voucher?.boxes;
+      const max_uses: number | null = boxes?.max_uses ?? null;
+      const uses_count: number = voucher?.uses_count ?? 0;
+
+      if (max_uses === null) {
+        if (data.status === "REDEEMED") { setError("Ce code a déjà été utilisé."); setLoading(false); return; }
+      } else {
+        if (uses_count >= max_uses) { setError("Ce voucher a été utilisé le nombre maximum de fois."); setLoading(false); return; }
+      }
 
       setInfo({
         id: data.id,
@@ -185,6 +196,9 @@ export default function PartnerScan() {
         partner_name: partner?.name ?? "",
         city: experience?.city ?? "",
         amount_dzd: Math.round((order?.total_dzd ?? 0) * 0.8),
+        voucher_id: voucher?.id ?? "",
+        max_uses,
+        uses_count,
       });
     } catch (err: any) {
       setError("Erreur de connexion. Réessayez.");
@@ -197,11 +211,27 @@ export default function PartnerScan() {
     if (!info) return;
     setConfirming(true);
     try {
-      const { error } = await supabase
-        .from("voucher_redemptions")
-        .update({ status: "REDEEMED", redeemed_at: new Date().toISOString() })
-        .eq("id", info.id);
-      if (error) throw error;
+      if (info.max_uses === null) {
+        const { error } = await supabase
+          .from("voucher_redemptions")
+          .update({ status: "REDEEMED", redeemed_at: new Date().toISOString() })
+          .eq("id", info.id);
+        if (error) throw error;
+      } else {
+        const newUsesCount = info.uses_count + 1;
+        const { error: insertError } = await supabase
+          .from("voucher_redemptions")
+          .insert({ voucher_id: info.voucher_id, scan_number: newUsesCount, redeemed_at: new Date().toISOString(), status: "REDEEMED" });
+        if (insertError) throw insertError;
+
+        const voucherUpdate: { uses_count: number; status?: string } = { uses_count: newUsesCount };
+        if (newUsesCount >= info.max_uses) voucherUpdate.status = "consumed";
+        const { error: updateError } = await supabase
+          .from("vouchers")
+          .update(voucherUpdate)
+          .eq("id", info.voucher_id);
+        if (updateError) throw updateError;
+      }
       setConfirmed(true);
     } catch {
       setError("Échec de la confirmation. Réessayez.");
@@ -387,6 +417,13 @@ export default function PartnerScan() {
                   <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Code</p>
                   <p className="font-mono text-sm text-gray-300">{info.redeem_code}</p>
                 </div>
+                {info.max_uses !== null && (
+                  <div className="rounded-2xl bg-white/5 border border-white/10 px-5 py-4">
+                    <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Utilisations</p>
+                    <p className="text-xl font-black text-white">Utilisation {info.uses_count + 1} / {info.max_uses}</p>
+                    <p className="text-gray-400 text-sm mt-1">{info.max_uses - info.uses_count - 1} restante(s) après cette visite</p>
+                  </div>
+                )}
                 <button
                   onClick={handleConfirm}
                   disabled={confirming}

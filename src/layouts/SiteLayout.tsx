@@ -196,7 +196,14 @@ export default function SiteLayout() {
                   ? "أول منصة هدايا تجارب في الجزائر. اشترِ، أرسل، استمتع."
                   : "Algeria's first experience gift platform. Buy, send, enjoy."}
               </p>
+              <a href="https://www.instagram.com/zeybox.dz" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                📸 @zeybox.dz 
+              </a>
+              <a href="https://www.tiktok.com/@zeybox.dz" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                🎵 @zeybox.dz
+              </a>
             </div>
+            
 
             {/* Links */}
             <div className="flex flex-col gap-2 text-sm">

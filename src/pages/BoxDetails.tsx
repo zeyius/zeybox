@@ -11,6 +11,8 @@ type Box = {
   price_dzd: number;
   category: string;
   image_url: string | null;
+  image_url_2: string | null;
+  image_url_3: string | null;
 };
 
 type Experience = {
@@ -24,13 +26,15 @@ type Experience = {
 
 export default function BoxDetails() {
   const { id } = useParams();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [box, setBox] = useState<Box | null>(null);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [buyerEmail, setBuyerEmail] = useState("");
@@ -47,12 +51,13 @@ export default function BoxDetails() {
 
       const { data: boxData, error: boxErr } = await supabase
         .from("boxes")
-        .select("id,name,description,validity_days,price_dzd,category,image_url")
+        .select("id,name,description,validity_days,price_dzd,category,image_url,image_url_2,image_url_3")
         .eq("id", id)
         .single();
 
       if (boxErr) console.error(boxErr);
       setBox((boxData as Box) ?? null);
+      setSelectedImage((boxData as Box)?.image_url ?? null);
 
       const { data: expData, error: expErr } = await supabase
         .from("box_experiences")
@@ -79,7 +84,7 @@ export default function BoxDetails() {
 
   const handleConfirmOrder = async () => {
     if (!buyerEmail || !buyerName) {
-      alert("Please fill in your details.");
+      alert(t('fill_details'));
       return;
     }
 
@@ -106,12 +111,12 @@ export default function BoxDetails() {
         if (data.checkout_url) {
           window.location.href = data.checkout_url;
         } else {
-          alert("Payment error. Please try again.");
+          alert(t('payment_error'));
           setBuying(false);
         }
       } catch (err) {
         console.error(err);
-        alert("Network error. Please try again.");
+        alert(t('network_error'));
         setBuying(false);
       }
       return;
@@ -134,46 +139,125 @@ export default function BoxDetails() {
 
     if (error) {
       console.error(error);
-      alert("Error placing order.");
+      alert(t('order_error'));
     } else {
       setCheckoutOpen(false);
-      alert("Order placed successfully!");
+      alert(t('order_success'));
       navigate("/account");
     }
     setBuying(false);
   };
 
-  if (loading) return <main className="max-w-7xl mx-auto px-4 py-10"><p className="text-gray-600 italic">{i18n.language === 'en' ? 'Loading...' : 'جار التحميل...'}</p></main>;
-  if (!box) return <main className="max-w-7xl mx-auto px-4 py-10"><p>{t('Box not found')}</p></main>;
+  if (loading) return <main className="max-w-7xl mx-auto px-4 py-10"><p className="text-gray-600 italic">{t('loading')}</p></main>;
+  if (!box) return <main className="max-w-7xl mx-auto px-4 py-10"><p>{t('box_not_found')}</p></main>;
+
+  const mobileImages = [box.image_url, box.image_url_2, box.image_url_3].filter(Boolean) as string[];
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
       <Link to="/best-sellers" className="text-sm font-bold hover:text-red-600 transition-colors">
-        {i18n.language === 'en' ? '← Back' : '→ عودة'}
+        {t('back')}
       </Link>
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <section className="lg:col-span-7">
           <div className="rounded-[2.5rem] border border-gray-100 px-8 pb-8 bg-white shadow-sm">
-            <div className="flex items-center justify-center py-8 md:py-12">
-            {box.image_url ? (
-              <img
-                src={box.image_url}
-                className="w-64 md:w-80 lg:w-96 object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-105"
-                alt={box.name}
-                loading="lazy"
-              />
-            ) : (
-              <span className="text-9xl">
-                {box.category === "Wellness" ? "💆" :
-                box.category === "Adventure" ? "🏔️" :
-                box.category === "Restaurant" || box.category === "Restaurants" ? "🍽️" :
-                box.category === "Weekend" ? "🏨" :
-                box.category === "Event" ? "🎉" :
-                box.category === "Enterprise" ? "🏢" : "🎁"}
-              </span>
-            )}
-          </div>
+            {/* Mobile swiper (below lg) */}
+            <div className="block lg:hidden py-8">
+              <div className="relative overflow-hidden rounded-3xl">
+                {mobileImages.length > 0 ? (
+                  <img
+                    src={mobileImages[currentIndex]}
+                    alt={box.name}
+                    className="w-full max-h-[400px] object-contain"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center py-8">
+                    <span className="text-9xl">
+                      {box.category === "Wellness" ? "💆" :
+                      box.category === "Adventure" ? "🏔️" :
+                      box.category === "Restaurant" || box.category === "Restaurants" ? "🍽️" :
+                      box.category === "Weekend" ? "🏨" :
+                      box.category === "Event" ? "🎉" :
+                      box.category === "Enterprise" ? "🏢" : "🎁"}
+                    </span>
+                  </div>
+                )}
+                {mobileImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentIndex((currentIndex - 1 + mobileImages.length) % mobileImages.length)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={() => setCurrentIndex((currentIndex + 1) % mobileImages.length)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center"
+                    >
+                      ›
+                    </button>
+                  </>
+                )}
+              </div>
+              {mobileImages.length > 1 && (
+                <div className="flex justify-center gap-2 mt-3">
+                  {mobileImages.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentIndex(i)}
+                      className={`w-2 h-2 rounded-full ${currentIndex === i ? "bg-red-600" : "bg-gray-300"}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Desktop gallery (lg and above) */}
+            <div className="hidden lg:flex gap-4 py-12">
+              <div className="flex flex-col gap-3">
+                {[box.image_url, box.image_url_2, box.image_url_3].map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(img)}
+                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 cursor-pointer flex items-center justify-center bg-gray-50 ${selectedImage === img ? "border-red-600" : "border-transparent"}`}
+                  >
+                    {img ? (
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-3xl">
+                        {box.category === "Wellness" ? "💆" :
+                        box.category === "Adventure" ? "🏔️" :
+                        box.category === "Restaurant" || box.category === "Restaurants" ? "🍽️" :
+                        box.category === "Weekend" ? "🏨" :
+                        box.category === "Event" ? "🎉" :
+                        box.category === "Enterprise" ? "🏢" : "🎁"}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="flex-1 flex items-center justify-center">
+                {selectedImage ? (
+                  <img
+                    src={selectedImage}
+                    alt={box.name}
+                    className="rounded-3xl max-h-[400px] object-contain"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-9xl">
+                    {box.category === "Wellness" ? "💆" :
+                    box.category === "Adventure" ? "🏔️" :
+                    box.category === "Restaurant" || box.category === "Restaurants" ? "🍽️" :
+                    box.category === "Weekend" ? "🏨" :
+                    box.category === "Event" ? "🎉" :
+                    box.category === "Enterprise" ? "🏢" : "🎁"}
+                  </span>
+                )}
+              </div>
+            </div>
             <h1 className="mt-8 text-4xl font-black">{box.name}</h1>
             <p className="mt-4 text-gray-500 leading-relaxed text-lg">{box.description}</p>
           </div>
@@ -197,7 +281,7 @@ export default function BoxDetails() {
         <aside className="lg:col-span-5">
           <div className="sticky top-24 rounded-[2.5rem] border-2 border-black p-8 bg-white shadow-2xl">
             <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-              {i18n.language === 'en' ? 'Starting from' : 'ابتداءً من'}
+              {t('starting_from')}
             </div>
             <div className="mt-2 text-4xl font-black">{box.price_dzd.toLocaleString()} DZD</div>
 
@@ -251,7 +335,7 @@ export default function BoxDetails() {
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 >
-                  <option value="CASH">{i18n.language === 'en' ? 'Cash on Delivery' : 'دفع عند الاستلام'}</option>
+                  <option value="CASH">{t('payment_cash')}</option>
                   <option value="BARIDPAY_QR">BaridiMob</option>
                   <option value="EDAHABIA">💳 EDAHABIA (بريد الجزائر)</option>
                   <option value="CIB">💳 CIB (carte bancaire)</option>
@@ -274,9 +358,7 @@ export default function BoxDetails() {
               {/* Info Chargily */}
               {(paymentMethod === "EDAHABIA" || paymentMethod === "CIB") && (
                 <div className="rounded-2xl bg-gray-50 px-5 py-4 text-sm text-gray-500">
-                  {i18n.language === 'en'
-                    ? '🔒 You will be redirected to a secure Chargily payment page.'
-                    : '🔒 سيتم تحويلك إلى صفحة دفع آمنة عبر Chargily.'}
+                  {t('payment_chargily_info')}
                 </div>
               )}
 
