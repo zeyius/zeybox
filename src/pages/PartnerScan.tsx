@@ -2,6 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 
+type ExperienceOption = {
+  id: string;
+  title: string;
+  description?: string;
+};
+
 type RedemptionInfo = {
   id: string;
   redeem_code: string;
@@ -14,6 +20,10 @@ type RedemptionInfo = {
   voucher_id: string;
   max_uses: number | null;
   uses_count: number;
+  qr_token: string;
+  experiences: ExperienceOption[];
+  selected_experience_id: string | null;
+  flow: "redeem_code" | "qr_token";
 };
 
 type HistoryItem = {
@@ -24,6 +34,8 @@ type HistoryItem = {
   experience_title: string;
   amount_dzd: number;
 };
+
+const genToken = () => Math.random().toString(36).slice(2, 10).toUpperCase();
 
 export default function PartnerScan() {
   const navigate = useNavigate();
@@ -100,7 +112,7 @@ export default function PartnerScan() {
         redeemed_at: r.redeemed_at,
         customer_name: order?.recipient_name || order?.buyer_name || "Guest",
         experience_title: r.experiences?.title ?? "",
-        amount_dzd: Math.round((order?.total_dzd ?? 0) * 0.8),
+        amount_dzd: order?.total_dzd ?? 0,
       };
     });
     setHistory(mapped);
@@ -123,16 +135,7 @@ export default function PartnerScan() {
         (decodedText: string) => {
           scanner.stop();
           setScanning(false);
-          try {
-            const data = JSON.parse(decodedText);
-            if (data.redeem_code) {
-              setCode(data.redeem_code);
-              handleScan(data.redeem_code);
-            }
-          } catch {
-            setCode(decodedText);
-            handleScan(decodedText);
-          }
+          handleScan(decodedText);
         },
         () => {}
       );
@@ -152,54 +155,121 @@ export default function PartnerScan() {
   };
 
   const handleScan = async (scannedCode?: string) => {
-    const cleanCode = (scannedCode || code).trim().toUpperCase().replace(/[–—]/g, '-');
-    if (!cleanCode) return;
+    const raw = (scannedCode || code).trim();
+    if (!raw) return;
 
     setLoading(true);
     setError("");
     setInfo(null);
 
     try {
-      const { data, error: fetchError } = await supabase
-        .from("voucher_redemptions")
-        .select(`
-          id, redeem_code, qr_token, status,
-          experiences:experience_id ( title, city, partners ( name ) ),
-          vouchers:voucher_id ( id, uses_count, orders ( recipient_name, buyer_name, total_dzd ), boxes:box_id ( max_uses ) )
-        `)
-        .eq("redeem_code", cleanCode)
-        .maybeSingle();
+      // Try to parse as JSON (new QR code format)
+      let parsedQR: any = null;
+      try { parsedQR = JSON.parse(raw); } catch {}
 
-      if (fetchError) throw fetchError;
-      if (!data) { setError("Code introuvable. Vérifiez et réessayez."); setLoading(false); return; }
+      if (parsedQR?.token) {
+        // QR token flow — fetch voucher directly by qr_token
+        const { data, error: fetchError } = await supabase
+          .from("vouchers")
+          .select(`
+            id, voucher_code, status, uses_count, qr_token,
+            boxes:box_id (
+              name, max_uses,
+              box_experiences ( experiences:experience_id ( id, title, description ) )
+            ),
+            orders ( recipient_name, buyer_name, total_dzd )
+          `)
+          .eq("qr_token", parsedQR.token)
+          .single();
 
-      const experience = data.experiences as any;
-      const partner = Array.isArray(experience?.partners) ? experience.partners[0] : experience?.partners;
-      const voucher = data.vouchers as any;
-      const order = Array.isArray(voucher?.orders) ? voucher.orders[0] : voucher?.orders;
-      const boxes = Array.isArray(voucher?.boxes) ? voucher.boxes[0] : voucher?.boxes;
-      const max_uses: number | null = boxes?.max_uses ?? null;
-      const uses_count: number = voucher?.uses_count ?? 0;
+        if (fetchError || !data) {
+          setError("Code introuvable. Vérifiez et réessayez.");
+          return;
+        }
 
-      if (max_uses === null) {
-        if (data.status === "REDEEMED") { setError("Ce code a déjà été utilisé."); setLoading(false); return; }
+        const voucher = data as any;
+        const box = Array.isArray(voucher.boxes) ? voucher.boxes[0] : voucher.boxes;
+        const order = Array.isArray(voucher.orders) ? voucher.orders[0] : voucher.orders;
+
+        const experiences: ExperienceOption[] = (box?.box_experiences ?? [])
+          .map((be: any) => be.experiences)
+          .filter((exp: any) => exp?.id && exp?.title);
+
+        const max_uses: number | null = box?.max_uses ?? null;
+        const uses_count: number = voucher.uses_count ?? 0;
+
+        if (voucher.status === "consumed" || (max_uses !== null && uses_count >= max_uses)) {
+          setError("Ce voucher a été utilisé le nombre maximum de fois.");
+          return;
+        }
+
+        setInfo({
+          id: "",
+          redeem_code: voucher.voucher_code ?? "",
+          status: voucher.status,
+          customer_name: order?.recipient_name || order?.buyer_name || "Guest",
+          experience_title: "",
+          partner_name: "",
+          city: "",
+          amount_dzd: Math.round((order?.total_dzd ?? 0) * 0.8),
+          voucher_id: voucher.id,
+          max_uses,
+          uses_count,
+          qr_token: voucher.qr_token ?? "",
+          experiences,
+          selected_experience_id: null,
+          flow: "qr_token",
+        });
       } else {
-        if (uses_count >= max_uses) { setError("Ce voucher a été utilisé le nombre maximum de fois."); setLoading(false); return; }
-      }
+        // Redeem code flow (existing behavior)
+        const cleanCode = raw.toUpperCase().replace(/[–—]/g, '-');
+        setCode(cleanCode);
 
-      setInfo({
-        id: data.id,
-        redeem_code: data.redeem_code,
-        status: data.status,
-        customer_name: order?.recipient_name || order?.buyer_name || "Guest",
-        experience_title: experience?.title ?? "",
-        partner_name: partner?.name ?? "",
-        city: experience?.city ?? "",
-        amount_dzd: Math.round((order?.total_dzd ?? 0) * 0.8),
-        voucher_id: voucher?.id ?? "",
-        max_uses,
-        uses_count,
-      });
+        const { data, error: fetchError } = await supabase
+          .from("voucher_redemptions")
+          .select(`
+            id, redeem_code, qr_token, status,
+            experiences:experience_id ( id, title, city, partners ( name ) ),
+            vouchers:voucher_id ( id, uses_count, orders ( recipient_name, buyer_name, total_dzd ), boxes:box_id ( max_uses ) )
+          `)
+          .eq("redeem_code", cleanCode)
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+        if (!data) { setError("Code introuvable. Vérifiez et réessayez."); return; }
+
+        const experience = data.experiences as any;
+        const partner = Array.isArray(experience?.partners) ? experience.partners[0] : experience?.partners;
+        const voucher = data.vouchers as any;
+        const order = Array.isArray(voucher?.orders) ? voucher.orders[0] : voucher?.orders;
+        const boxes = Array.isArray(voucher?.boxes) ? voucher.boxes[0] : voucher?.boxes;
+        const max_uses: number | null = boxes?.max_uses ?? null;
+        const uses_count: number = voucher?.uses_count ?? 0;
+
+        if (max_uses === null) {
+          if (data.status === "REDEEMED") { setError("Ce code a déjà été utilisé."); return; }
+        } else {
+          if (uses_count >= max_uses) { setError("Ce voucher a été utilisé le nombre maximum de fois."); return; }
+        }
+
+        setInfo({
+          id: data.id,
+          redeem_code: data.redeem_code,
+          status: data.status,
+          customer_name: order?.recipient_name || order?.buyer_name || "Guest",
+          experience_title: experience?.title ?? "",
+          partner_name: partner?.name ?? "",
+          city: experience?.city ?? "",
+          amount_dzd: Math.round((order?.total_dzd ?? 0) * 0.8),
+          voucher_id: voucher?.id ?? "",
+          max_uses,
+          uses_count,
+          qr_token: data.qr_token ?? "",
+          experiences: [],
+          selected_experience_id: experience?.id ?? null,
+          flow: "redeem_code",
+        });
+      }
     } catch (err: any) {
       setError("Erreur de connexion. Réessayez.");
     } finally {
@@ -209,29 +279,70 @@ export default function PartnerScan() {
 
   const handleConfirm = async () => {
     if (!info) return;
+    if (info.flow === "qr_token" && !info.selected_experience_id) return;
+
     setConfirming(true);
+
+    // Resolve confirmed experience title before async ops
+    let confirmedTitle = info.experience_title;
+    if (info.flow === "qr_token" && info.selected_experience_id) {
+      const exp = info.experiences.find(e => e.id === info.selected_experience_id);
+      if (exp) confirmedTitle = exp.title;
+    }
+
     try {
-      if (info.max_uses === null) {
-        const { error } = await supabase
-          .from("voucher_redemptions")
-          .update({ status: "REDEEMED", redeemed_at: new Date().toISOString() })
-          .eq("id", info.id);
-        if (error) throw error;
-      } else {
+      if (info.flow === "qr_token") {
+        const newRedeemCode = "RDM-" + genToken();
         const newUsesCount = info.uses_count + 1;
+
         const { error: insertError } = await supabase
           .from("voucher_redemptions")
-          .insert({ voucher_id: info.voucher_id, scan_number: newUsesCount, redeemed_at: new Date().toISOString(), status: "REDEEMED" });
+          .insert({
+            voucher_id: info.voucher_id,
+            experience_id: info.selected_experience_id,
+            redeem_code: newRedeemCode,
+            qr_token: info.qr_token,
+            status: "REDEEMED",
+            redeemed_at: new Date().toISOString(),
+          });
         if (insertError) throw insertError;
 
         const voucherUpdate: { uses_count: number; status?: string } = { uses_count: newUsesCount };
-        if (newUsesCount >= info.max_uses) voucherUpdate.status = "consumed";
+        if (info.max_uses === null || newUsesCount >= (info.max_uses ?? 1)) {
+          voucherUpdate.status = "consumed";
+        }
         const { error: updateError } = await supabase
           .from("vouchers")
           .update(voucherUpdate)
           .eq("id", info.voucher_id);
         if (updateError) throw updateError;
+
+      } else {
+        // Existing redeem_code flow
+        if (info.max_uses === null) {
+          const { error } = await supabase
+            .from("voucher_redemptions")
+            .update({ status: "REDEEMED", redeemed_at: new Date().toISOString() })
+            .eq("id", info.id);
+          if (error) throw error;
+        } else {
+          const newUsesCount = info.uses_count + 1;
+          const { error: insertError } = await supabase
+            .from("voucher_redemptions")
+            .insert({ voucher_id: info.voucher_id, scan_number: newUsesCount, redeemed_at: new Date().toISOString(), status: "REDEEMED" });
+          if (insertError) throw insertError;
+
+          const voucherUpdate: { uses_count: number; status?: string } = { uses_count: newUsesCount };
+          if (newUsesCount >= info.max_uses) voucherUpdate.status = "consumed";
+          const { error: updateError } = await supabase
+            .from("vouchers")
+            .update(voucherUpdate)
+            .eq("id", info.voucher_id);
+          if (updateError) throw updateError;
+        }
       }
+
+      setInfo(prev => prev ? { ...prev, experience_title: confirmedTitle } : prev);
       setConfirmed(true);
     } catch {
       setError("Échec de la confirmation. Réessayez.");
@@ -404,11 +515,46 @@ export default function PartnerScan() {
                   <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Client</p>
                   <p className="text-2xl font-black">{info.customer_name}</p>
                 </div>
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Expérience</p>
-                  <p className="text-lg font-bold">{info.experience_title}</p>
-                  <p className="text-gray-400 text-sm">{info.city}</p>
-                </div>
+
+                {/* Experience display — pre-selected for redeem_code flow */}
+                {info.flow === "redeem_code" && info.experience_title && (
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Expérience</p>
+                    <p className="text-lg font-bold">{info.experience_title}</p>
+                    {info.city && <p className="text-gray-400 text-sm">{info.city}</p>}
+                  </div>
+                )}
+
+                {/* Experience selection — QR flow */}
+                {info.flow === "qr_token" && info.experiences.length > 0 && (
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-widest mb-3">Expériences disponibles</p>
+                    <div className="space-y-2">
+                      {info.experiences.map((exp) => (
+                        <button
+                          key={exp.id}
+                          onClick={() => setInfo(prev => prev ? { ...prev, selected_experience_id: exp.id } : prev)}
+                          className={`w-full text-left border rounded-2xl p-4 cursor-pointer transition-all ${
+                            info.selected_experience_id === exp.id
+                              ? "border-yellow-400 bg-yellow-400/10 text-yellow-400"
+                              : "border-white/20 bg-white/5 text-white"
+                          }`}
+                        >
+                          <p className="font-bold text-sm">{exp.title}</p>
+                          {exp.description && (
+                            <p className="text-xs opacity-60 mt-0.5">{exp.description}</p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    {!info.selected_experience_id && (
+                      <p className="text-gray-500 text-xs text-center mt-3 italic">
+                        Demandez au client de choisir une expérience
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="rounded-2xl bg-yellow-400/10 border border-yellow-400/20 px-5 py-4">
                   <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Montant à encaisser</p>
                   <p className="text-3xl font-black text-yellow-400">{info.amount_dzd.toLocaleString()} <span className="text-lg">DZD</span></p>
@@ -426,7 +572,7 @@ export default function PartnerScan() {
                 )}
                 <button
                   onClick={handleConfirm}
-                  disabled={confirming}
+                  disabled={confirming || (info.flow === "qr_token" && !info.selected_experience_id)}
                   className="w-full py-5 rounded-2xl bg-green-500 text-white font-black text-lg uppercase tracking-widest hover:bg-green-400 transition-all disabled:opacity-30"
                 >
                   {confirming ? "Confirmation..." : "✓ Confirmer le service"}
