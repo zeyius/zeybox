@@ -12,6 +12,7 @@ import AdminPartners from "./pages/AdminPartners";
 import PartnerScan from "./pages/PartnerScan";
 import PartnerLogin from "./pages/PartnerLogin";
 import PartnerPage from "./pages/PartnerPage";
+import QRPage from "./pages/QRPage";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
       {/* Partner portal — standalone, no nav */}
       <Route path="/partner/scan" element={<PartnerScan />} />
       <Route path="/partner/login" element={<PartnerLogin />} />
+      <Route path="/qr/:token" element={<QRPage />} />
 
       {/* Main site */}
       <Route element={<SiteLayout />}>

@@ -165,6 +165,14 @@ const resources = {
       cat_weekend: "Weekend",
       cat_event: "Event",
       cat_travel: "Travel",
+
+      // QR page
+      qr_invalid: "Invalid QR code",
+      back_home: "← Back to home",
+      qr_hello: "Hello",
+      qr_instruction: "Show this QR code to the partner upon arrival",
+      qr_uses_left: "uses remaining",
+      qr_consumed: "This voucher has been used",
     }
   },
   fr: {
@@ -329,6 +337,14 @@ const resources = {
       cat_weekend: "Week-end",
       cat_event: "Événement",
       cat_travel: "Voyage",
+
+      // QR page
+      qr_invalid: "QR code invalide",
+      back_home: "← Retour à l'accueil",
+      qr_hello: "Bonjour",
+      qr_instruction: "Montrez ce QR code au partenaire à votre arrivée",
+      qr_uses_left: "utilisations restantes",
+      qr_consumed: "Ce voucher a été utilisé",
     }
   },
   ar: {
@@ -493,6 +509,14 @@ const resources = {
       cat_weekend: "عطلة نهاية الأسبوع",
       cat_event: "فعاليات ومناسبات",
       cat_travel: "سفر ورحلات",
+
+      // QR page
+      qr_invalid: "رمز QR غير صالح",
+      back_home: "→ العودة للرئيسية",
+      qr_hello: "مرحباً",
+      qr_instruction: "أرِ هذا الرمز للشريك عند وصولك",
+      qr_uses_left: "استخدامات متبقية",
+      qr_consumed: "تم استخدام هذه القسيمة",
     }
   }
 };
