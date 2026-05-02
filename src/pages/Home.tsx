@@ -24,22 +24,15 @@ type Box = {
   image_url: string | null;
 };
 
-type Partner = {
-  id: string;
-  name: string;
-  city: string | null;
-};
 
-const ORBIT_ITEMS = [
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Weekend", labelFr: "Week-end", labelAr: "عطلة", color: "bg-blue-50" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Restaurants", labelFr: "Restaurants", labelAr: "مطاعم", color: "bg-red-50" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Wellness", labelFr: "Bien-être", labelAr: "استرخاء", color: "white" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Adventure", labelFr: "Aventure", labelAr: "مغامرة", color: "bg-orange-50" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Travel", labelFr: "Voyage", labelAr: "سفر", color: "bg-yellow-50" },
-  { image: "/images/orbit4.png", emoji: null, labelKey: "Event", labelFr: "Événements", labelAr: "فعاليات", color: "bg-purple-50" },
+const CATEGORY_CARDS = [
+  { key: "Wellness",    image: "/images/hero1.webp" },
+  { key: "Restaurants", image: "/images/hero2.webp" },
+  { key: "Adventure",   image: "/images/hero3.webp" },
+  { key: "Weekend",     image: "/images/hero4.webp" },
+  { key: "Event",       image: null },
+  { key: "Travel",      image: null },
 ];
-
-const CATEGORIES = ["Wellness", "Restaurants", "Adventure", "Weekend", "Travel", "Event"];
 
 const HERO_SLIDES = [
   { image: "/images/hero1.webp", titleEn: "Perfect Gift", titleFr: "Cadeau Parfait", titleAr: "هدية مثالية" },
@@ -76,7 +69,7 @@ const HOW_IT_WORKS = [
 export default function Home() {
   const { t, i18n } = useTranslation();
   const [boxes, setBoxes] = useState<Box[]>([]);
-  const [partners, setPartners] = useState<Partner[]>([]);
+  const [partners, setPartners] = useState<{id: string, name: string, slug: string, cover_image_url: string | null, logo_url: string | null, category: string, city: string | null}[]>([]);
   const explorerRef = useRef<HTMLDivElement>(null);
   const isAr = i18n.language === "ar";
 
@@ -90,11 +83,11 @@ export default function Home() {
           .limit(20),
         supabase
           .from("partners")
-          .select("id, name, city")
-          .order("name"),
+          .select("id, name, slug, description, category, city, cover_image_url, logo_url")
+          .eq("is_active", true),
       ]);
       setBoxes((boxData as Box[]) || []);
-      setPartners((partnerData as Partner[]) || []);
+      setPartners(partnerData ?? []);
     };
     loadData();
   }, []);
@@ -162,7 +155,7 @@ export default function Home() {
           </div>
 
           {/* 3D SLIDER */}
-          <div className="relative h-[350px] md:h-[500px] w-full flex items-center justify-center [perspective:1000px]">
+          <div className="relative h-[420px] md:h-[450px] w-full flex items-center justify-center [perspective:1000px]">
             <div className="absolute w-[250px] md:w-[500px] h-[250px] md:h-[500px] bg-red-500/5 rounded-full blur-[80px] md:blur-[140px]" />
             <Swiper
               key={i18n.language}
@@ -177,16 +170,30 @@ export default function Home() {
               modules={[EffectCoverflow, Autoplay]}
               className="w-full py-12 !overflow-visible"
             >
-              {ORBIT_ITEMS.map((item) => (
-                <SwiperSlide key={item.labelKey} style={{ width: '220px' }}>
-                  <Link to={`/best-sellers?category=${item.labelKey}`} className="w-full h-64 md:h-80 flex flex-col items-center justify-center cursor-pointer">
-                   <img
-                    src={item.image ?? undefined}
-                    alt={item.labelKey}
-                    className="w-36 md:w-44 object-contain mb-4 md:mb-6 animate-float drop-shadow-lg"
-                  />
-                    <span className="text-[10px] md:text-sm font-black uppercase text-gray-700 tracking-[0.2em] text-center px-4">
-                      {i18n.language === 'ar' ? item.labelAr : i18n.language === 'fr' ? item.labelFr : item.labelKey}
+              {boxes.slice(0, 6).map((box) => (
+                <SwiperSlide key={box.id} style={{ width: '220px' }}>
+                  <Link to={`/box/${box.id}`} className="w-full h-80 md:h-72 flex flex-col items-center justify-center cursor-pointer">
+                    <span className="text-[9px] font-black uppercase tracking-widest bg-red-600 text-white px-3 py-1 rounded-full mb-3">
+                      {i18n.language === 'ar' ? "الأكثر مبيعاً" : i18n.language === 'fr' ? "MEILLEURE VENTE" : "BEST SELLER"}
+                    </span>
+                    {box.image_url ? (
+                      <img
+                        src={box.image_url}
+                        alt={box.name}
+                        className="w-36 md:w-40 object-contain mb-4 md:mb-6 animate-float drop-shadow-lg"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-7xl md:text-8xl mb-4 md:mb-6 animate-float drop-shadow-lg">
+                        {box.category === "Restaurants" ? "🍽️" :
+                         box.category === "Wellness" ? "💆" :
+                         box.category === "Adventure" ? "🏔️" :
+                         box.category === "Weekend" ? "🏨" :
+                         box.category === "Event" ? "🎉" : "🎁"}
+                      </span>
+                    )}
+                    <span className="text-sm md:text-base font-black uppercase text-gray-700 tracking-[0.2em] text-center px-4 line-clamp-1 w-full">
+                      {box.name}
                     </span>
                   </Link>
                 </SwiperSlide>
@@ -220,7 +227,7 @@ export default function Home() {
       </div>
       </section>
 
-      {/* 4. COLLECTIONS */}
+      {/* 4. CATEGORIES */}
       <section ref={explorerRef} className="bg-gray-50 py-16 md:py-24 rounded-t-[3rem] md:rounded-t-[4rem] shadow-inner">
         <div className="max-w-7xl mx-auto px-4">
           <div className="mb-12">
@@ -230,71 +237,98 @@ export default function Home() {
             <div className="h-1.5 w-16 bg-yellow-400 mt-2 rounded-full" />
           </div>
 
-          {CATEGORIES.map((cat) => {
-            const categoryBoxes = boxes.filter(b => b.category === cat);
-            if (categoryBoxes.length === 0) return null;
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            {CATEGORY_CARDS.map((cat) => {
+              const count = boxes.filter(b => b.category === cat.key).length;
+              const label =
+                i18n.language === 'ar' ? (
+                  cat.key === "Wellness" ? "عناية واسترخاء" :
+                  cat.key === "Restaurants" ? "مطاعم فاخرة" :
+                  cat.key === "Adventure" ? "مغامرات" :
+                  cat.key === "Weekend" ? "عطلة نهاية الأسبوع" :
+                  cat.key === "Travel" ? "سفر ورحلات" : "فعاليات ومناسبات"
+                ) : i18n.language === 'fr' ? (
+                  cat.key === "Wellness" ? "Bien-être" :
+                  cat.key === "Restaurants" ? "Restaurants" :
+                  cat.key === "Adventure" ? "Aventure" :
+                  cat.key === "Weekend" ? "Week-end" :
+                  cat.key === "Travel" ? "Voyage" : "Événements"
+                ) : cat.key;
 
-            return (
-              <div key={cat} className="mb-16 last:mb-0">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl md:text-2xl font-black text-gray-900 uppercase">
-                    {i18n.language === 'ar' ? (
-                      cat === "Wellness" ? "عناية واسترخاء" :
-                      cat === "Restaurants" ? "مطاعم فاخرة" :
-                      cat === "Adventure" ? "مغامرات" :
-                      cat === "Weekend" ? "عطلة نهاية الأسبوع" :
-                      cat === "Travel" ? "سفر ورحلات" : "فعاليات ومناسبات"
-                    ) : i18n.language === 'fr' ? (
-                      cat === "Wellness" ? "Bien-être" :
-                      cat === "Restaurants" ? "Restaurants" :
-                      cat === "Adventure" ? "Aventure" :
-                      cat === "Weekend" ? "Week-end" :
-                      cat === "Travel" ? "Voyage" : "Événements"
-                    ) : cat}
-                  </h3>
-                  <Link
-                    to={`/best-sellers?category=${cat}`}
-                    className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors"
-                  >
-                    {i18n.language === 'ar' ? "عرض الكل ←" : i18n.language === 'fr' ? "Voir tout →" : "See all →"}
-                  </Link>
-                </div>
-
-                <div className="flex gap-4 md:gap-8 overflow-x-auto pb-6 no-scrollbar snap-x -mx-4 px-4">
-                  {categoryBoxes.map((b) => (
-                    <Link to={`/box/${b.id}`} key={b.id} className="min-w-[260px] md:min-w-[350px] snap-center group">
-                      <div className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-8 transition-all duration-500 hover:shadow-xl hover:border-yellow-200 relative">
-                        <div className="h-40 md:h-52 rounded-[2rem] bg-gray-50 flex items-center justify-center mb-6">
-                          {b.image_url ? (
-                            <img src={b.image_url} className="w-24 md:w-36 object-contain transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6 drop-shadow-lg" alt={b.name} loading="lazy" />
-                          ) : (
-                            <span className="text-5xl md:text-6xl">
-                              {b.category === "Wellness" ? "💆" :
-                               b.category === "Adventure" ? "🏔️" :
-                               b.category === "Restaurants" ? "🍽️" :
-                               b.category === "Weekend" ? "🏨" :
-                               b.category === "Event" ? "🎉" : "🎁"}
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-bold text-lg md:text-xl text-black truncate">{b.name}</h4>
-                        <div className="mt-6 flex items-center justify-between border-t border-gray-50 pt-4">
-                          <span className="text-xl font-black text-black">
-                            {b.price_dzd.toLocaleString()} <span className="text-xs">DA</span>
-                          </span>
-                          <span className="bg-yellow-400 text-black text-[9px] font-black px-4 py-2 rounded-full uppercase tracking-widest group-hover:bg-red-600 group-hover:text-white transition-colors">
-                            {t('btn_view_box')}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+              return (
+                <Link
+                  key={cat.key}
+                  to={`/best-sellers?category=${cat.key}`}
+                  className="relative group overflow-hidden rounded-3xl aspect-[4/3] cursor-pointer"
+                >
+                  {cat.image ? (
+                    <img
+                      src={cat.image}
+                      alt={cat.key}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black" />
+                  )}
+                  <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors duration-300" />
+                  <div className="relative z-10 h-full flex flex-col justify-end p-5 md:p-8">
+                    <h3 className="text-white text-xl md:text-3xl font-black uppercase tracking-tight leading-tight drop-shadow-lg">
+                      {label}
+                    </h3>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-white/70 text-xs md:text-sm font-semibold">
+                        {count} {i18n.language === 'ar' ? 'صندوق' : i18n.language === 'fr' ? 'coffrets' : 'boxes'}
+                      </span>
+                      <span className={`text-white text-xl font-bold transition-transform duration-300 group-hover:translate-x-1 ${isAr ? '-scale-x-100 inline-block' : ''}`}>
+                        →
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </section>
+
+      {/* 5. PARTNER CARDS */}
+      {partners.length > 0 && (
+        <section className="py-16 md:py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="mb-10">
+              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic">
+                {i18n.language === 'ar' ? "أين تحدث التجربة" : i18n.language === 'fr' ? "Là où ça se passe" : "Where it happens"}
+              </h2>
+              <div className="h-1.5 w-16 bg-yellow-400 mt-2 rounded-full" />
+            </div>
+            <div className="flex gap-6 overflow-x-auto pb-6 no-scrollbar snap-x -mx-4 px-4">
+              {partners.map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/partners/${p.slug}`}
+                  className="min-w-[200px] snap-center rounded-3xl border border-gray-100 bg-white p-6 flex flex-col items-center hover:shadow-lg hover:border-yellow-200 transition-all duration-300"
+                >
+                  <div className="w-24 h-24 rounded-full border-4 border-red-600 overflow-hidden flex items-center justify-center bg-gray-50">
+                    {p.logo_url ? (
+                      <img src={p.logo_url} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <span className="text-3xl">
+                        {p.category === "Restaurants" ? "🍽️" :
+                         p.category === "Wellness" ? "💆" :
+                         p.category === "Adventure" ? "🏔️" :
+                         p.category === "Weekend" ? "🏨" : "🏢"}
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-black text-lg mt-4 text-center line-clamp-1">{p.name}</p>
+                  {p.city && <p className="text-xs text-gray-400 text-center mt-1">{p.city}</p>}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* PARTNERS SECTION */}
 <section className="py-16 md:py-24 bg-white">

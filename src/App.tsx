@@ -11,6 +11,7 @@ import Account from "./pages/Account";
 import AdminPartners from "./pages/AdminPartners";
 import PartnerScan from "./pages/PartnerScan";
 import PartnerLogin from "./pages/PartnerLogin";
+import PartnerPage from "./pages/PartnerPage";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/admin/partners" element={<AdminPartners />} />
         <Route path="/account" element={<Account />} />
         <Route path="/box/:id" element={<BoxDetails />} />
+        <Route path="/partners/:slug" element={<PartnerPage />} />
         <Route path="/gift-ideas" element={<GiftIdeas />} />
         <Route path="/enterprise" element={<Enterprise />} />
         <Route path="/voucher" element={<Voucher />} />
