@@ -30,8 +30,8 @@ const CATEGORY_CARDS = [
   { key: "Restaurants", image: "/images/hero2.webp" },
   { key: "Adventure",   image: "/images/hero3.webp" },
   { key: "Weekend",     image: "/images/hero4.webp" },
-  { key: "Event",       image: null },
-  { key: "Travel",      image: null },
+  { key: "Event",       image: "/images/hero4.webp" },
+  { key: "Travel",      image: "/images/hero4.webp" },
 ];
 
 const HERO_SLIDES = [
