@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 type Redemption = {
   redeem_code: string;
@@ -24,11 +24,31 @@ type PartnerSummary = {
 };
 
 export default function AdminPartners() {
+  const navigate = useNavigate();
+  const [authorized, setAuthorized] = useState(false);
   const [partners, setPartners] = useState<PartnerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate("/login"); return; }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profile?.role !== "ADMIN") { navigate("/"); return; }
+      setAuthorized(true);
+    };
+    checkAuth();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!authorized) return;
     const load = async () => {
       setLoading(true);
 
@@ -67,7 +87,9 @@ export default function AdminPartners() {
     };
 
     load();
-  }, []);
+  }, [authorized]);
+
+  if (!authorized) return null;
 
   const statusBadge = (status: string) => {
     if (status === "REDEEMED") return <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-bold">Redeemed</span>;

@@ -22,6 +22,7 @@ type Box = {
   category: string;
   tier: string;
   image_url: string | null;
+  is_featured?: boolean;
 };
 
 
@@ -69,13 +70,20 @@ const HOW_IT_WORKS = [
 export default function Home() {
   const { t, i18n } = useTranslation();
   const [boxes, setBoxes] = useState<Box[]>([]);
+  const [featuredBoxes, setFeaturedBoxes] = useState<Box[]>([]);
   const [partners, setPartners] = useState<{id: string, name: string, slug: string, cover_image_url: string | null, logo_url: string | null, category: string, city: string | null}[]>([]);
   const explorerRef = useRef<HTMLDivElement>(null);
   const isAr = i18n.language === "ar";
 
   useEffect(() => {
     const loadData = async () => {
-      const [{ data: boxData }, { data: partnerData }] = await Promise.all([
+      const [{ data: featuredData }, { data: boxData }, { data: partnerData }] = await Promise.all([
+        supabase
+          .from("boxes")
+          .select("id, name, price_dzd, description, validity_days, category, tier, image_url")
+          .eq("is_active", true)
+          .eq("is_featured", true)
+          .limit(6),
         supabase
           .from("boxes")
           .select("id, name, price_dzd, description, validity_days, category, tier, image_url")
@@ -86,6 +94,7 @@ export default function Home() {
           .select("id, name, slug, description, category, city, cover_image_url, logo_url")
           .eq("is_active", true),
       ]);
+      setFeaturedBoxes((featuredData as Box[]) || []);
       setBoxes((boxData as Box[]) || []);
       setPartners(partnerData ?? []);
     };
@@ -177,7 +186,7 @@ export default function Home() {
               speed={600}
               onSwiper={(swiper) => { setTimeout(() => swiper.autoplay.start(), 500) }}
             >
-              {boxes.slice(0, 6).map((box) => (
+              {featuredBoxes.map((box) => (
                 <SwiperSlide key={box.id} style={{ width: '220px' }}>
                   <Link to={`/box/${box.id}`} className="w-full flex flex-col items-center justify-center cursor-pointer" style={{ height: '280px' }}>
                     <span className="text-[9px] font-black uppercase tracking-widest bg-red-600 text-white px-3 py-1 rounded-full mb-3">

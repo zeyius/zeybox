@@ -1,156 +1,146 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-type Box = {
-  id: string;
-  name: string;
-  description: string | null;
-  validity_days: number;
-  price_dzd: number;
-  category: string;
-  image_url: string | null;
-};
+import { Link } from "react-router-dom";
 
 const OCCASIONS = [
-  { tKey: "gift_all", value: "All" },
-  { tKey: "gift_for_her", value: "For her" },
-  { tKey: "gift_for_him", value: "For him" },
-  { tKey: "gift_couple", value: "Couple" },
-  { tKey: "gift_birthday", value: "Birthday" },
-  { tKey: "gift_parents", value: "Parents" },
-];
-
-const BUDGETS = [
-  { label: "< 5000 DZD", value: "u5000", min: 0, max: 4999 },
-  { label: "5000–10000", value: "5k10k", min: 5000, max: 10000 },
-  { label: "10000–20000", value: "10k20k", min: 10000, max: 20000 },
-  { label: "20000+", value: "20k", min: 20000, max: Infinity },
+  { key: "anniversaire", emoji: "🎂", en: "Birthday", fr: "Anniversaire", ar: "عيد ميلاد" },
+  { key: "mariage", emoji: "💍", en: "Wedding", fr: "Mariage", ar: "زفاف" },
+  { key: "couple", emoji: "❤️", en: "Couple", fr: "En amoureux", ar: "للمتزوجين" },
+  { key: "bac", emoji: "🎓", en: "Bac réussi", fr: "Bac réussi", ar: "نجاح البكالوريا" },
+  { key: "amies", emoji: "👯", en: "Girls Trip", fr: "Entre amies", ar: "بين صديقات" },
+  { key: "famille", emoji: "👨‍👩‍👧", en: "Family", fr: "En famille", ar: "عائلي" },
+  { key: "promotion", emoji: "🏆", en: "Promotion", fr: "Promotion", ar: "ترقية" },
+  { key: "naissance", emoji: "👶", en: "New Baby", fr: "Naissance", ar: "مولود جديد" },
 ];
 
 export default function GiftIdeas() {
-  const { t } = useTranslation();
-  const [boxes, setBoxes] = useState<Box[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState("All");
-  const [selectedBudget, setSelectedBudget] = useState("All");
+  const { i18n } = useTranslation();
+  const lang = i18n.language as "en" | "fr" | "ar";
+
+  const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
+  const [boxes, setBoxes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const heroTitle = { en: "Gift Ideas", fr: "Idées Cadeaux", ar: "أفكار هدايا" }[lang] ?? "Gift Ideas";
+  const heroSub = {
+    en: "Find the perfect gift for every occasion",
+    fr: "Trouvez le cadeau parfait pour chaque occasion",
+    ar: "اعثر على الهدية المثالية لكل مناسبة",
+  }[lang] ?? "Find the perfect gift for every occasion";
+
+  const occasionName = (o: typeof OCCASIONS[0]) => o[lang] ?? o.en;
 
   useEffect(() => {
-    const load = async () => {
+    if (!selectedOccasion) { setBoxes([]); return; }
+    const fetch = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("boxes")
-        .select("id,name,description,validity_days,price_dzd,category,image_url")
+        .select("id, name, price_dzd, description, category, image_url, validity_days, occasion")
         .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      if (error) console.error(error);
-      setBoxes((data ?? []) as Box[]);
+        .eq("occasion", selectedOccasion);
+      setBoxes(data ?? []);
       setLoading(false);
     };
-    load();
-  }, []);
+    fetch();
+  }, [selectedOccasion]);
 
-  const filteredBoxes = boxes.filter((b) => {
-    if (selectedBudget === "All") return true;
-    const budget = BUDGETS.find((bu) => bu.value === selectedBudget);
-    return budget ? b.price_dzd >= budget.min && b.price_dzd <= budget.max : true;
-  });
+  const categoryEmoji = (cat: string) =>
+    cat === "Wellness" ? "💆" :
+    cat === "Adventure" ? "🏔️" :
+    cat === "Restaurant" || cat === "Restaurants" ? "🍽️" :
+    cat === "Weekend" ? "🏨" :
+    cat === "Event" ? "🎉" : "🎁";
+
+  const emptyPrompt = {
+    en: { title: "Choose an occasion above", sub: "We'll find the perfect gift for you" },
+    fr: { title: "Choisissez une occasion ci-dessus", sub: "On trouvera le cadeau parfait pour vous" },
+    ar: { title: "اختر مناسبة من الأعلى", sub: "سنجد لك الهدية المثالية" },
+  }[lang] ?? { title: "Choose an occasion above", sub: "We'll find the perfect gift for you" };
+
+  const emptyResults = {
+    en: { title: "No boxes for this occasion yet", sub: "Check back soon!" },
+    fr: { title: "Aucun coffret pour cette occasion", sub: "Revenez bientôt !" },
+    ar: { title: "لا توجد صناديق لهذه المناسبة بعد", sub: "تحقق مرة أخرى قريباً!" },
+  }[lang] ?? { title: "No boxes for this occasion yet", sub: "Check back soon!" };
+
+  const viewBoxLabel = { en: "View Box", fr: "Voir le coffret", ar: "عرض الصندوق" }[lang] ?? "View Box";
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-6 md:py-10">
-      <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
-        {t('nav_gift_ideas')}
-      </h1>
-
-      <div className="mt-6 flex overflow-x-auto pb-2 gap-2 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
-        {OCCASIONS.map((o) => (
-          <button
-            key={o.value}
-            onClick={() => setSelected(o.value)}
-            className={`flex-none px-5 py-2 rounded-full border text-sm font-medium transition-all whitespace-nowrap active:scale-95 ${
-              selected === o.value
-                ? "bg-black text-white border-black"
-                : "border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
-            }`}
-          >
-            {t(o.tKey)}
-          </button>
-        ))}
+    <main className="max-w-7xl mx-auto px-4 py-8 md:py-14">
+      {/* Hero */}
+      <div className="text-center mb-10">
+        <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tight text-gray-900 inline-block relative">
+          {heroTitle}
+          <span className="absolute left-0 -bottom-1 w-full h-1 bg-yellow-400 rounded-full" />
+        </h1>
+        <p className="mt-5 text-gray-400 text-base md:text-lg">{heroSub}</p>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <aside className="hidden lg:block lg:col-span-3">
-          <div className="sticky top-24 space-y-4">
-            <div className="rounded-3xl border border-gray-100 p-6 bg-gray-50/50">
-              <div className="font-bold text-gray-900">{t('filter_title')}</div>
-              <div className="mt-4 space-y-3 text-sm text-gray-600">
-                <div className="font-semibold text-gray-400 uppercase text-[10px] tracking-widest">{t('filter_budget')}</div>
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input type="radio" name="gift-budget" value="All" checked={selectedBudget === "All"} onChange={() => setSelectedBudget("All")} className="w-4 h-4 text-red-600 focus:ring-red-500" />
-                  <span className="group-hover:text-black transition-colors">{t('filter_all_prices')}</span>
-                </label>
-                {BUDGETS.map((b) => (
-                  <label key={b.value} className="flex items-center gap-3 cursor-pointer group">
-                    <input type="radio" name="gift-budget" value={b.value} checked={selectedBudget === b.value} onChange={() => setSelectedBudget(b.value)} className="w-4 h-4 text-red-600 focus:ring-red-500" />
-                    <span className="group-hover:text-black transition-colors">{b.label}</span>
-                  </label>
-                ))}
+      {/* Occasions grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        {OCCASIONS.map((o) => {
+          const selected = selectedOccasion === o.key;
+          return (
+            <button
+              key={o.key}
+              onClick={() => setSelectedOccasion(selected ? null : o.key)}
+              className={`flex flex-col items-center gap-2 rounded-3xl border p-5 cursor-pointer transition-all duration-200 ${
+                selected
+                  ? "bg-black text-white border-black"
+                  : "bg-white border-gray-100 hover:border-yellow-400 hover:shadow-md text-gray-900"
+              }`}
+            >
+              <span className="text-4xl">{o.emoji}</span>
+              <span className="font-black text-sm">{occasionName(o)}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Results */}
+      {!selectedOccasion ? (
+        <div className="mt-16 text-center">
+          <p className="text-5xl mb-4">🎁</p>
+          <p className="font-black text-xl">{emptyPrompt.title}</p>
+          <p className="text-gray-400 text-sm mt-2">{emptyPrompt.sub}</p>
+        </div>
+      ) : loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : boxes.length === 0 ? (
+        <div className="mt-16 text-center">
+          <p className="text-5xl mb-4">😔</p>
+          <p className="font-black text-xl">{emptyResults.title}</p>
+          <p className="text-gray-400 text-sm mt-2">{emptyResults.sub}</p>
+        </div>
+      ) : (
+        <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+          {boxes.map((b) => (
+            <div key={b.id} className="group rounded-2xl md:rounded-3xl border border-gray-100 p-3 md:p-5 transition-all duration-300 hover:shadow-2xl hover:border-yellow-400 bg-white flex flex-col">
+              <div className="aspect-square rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center transition-colors group-hover:bg-yellow-50 overflow-hidden">
+                {b.image_url ? (
+                  <img src={b.image_url} className="w-28 md:w-38 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" alt={b.name} loading="lazy" />
+                ) : (
+                  <span className="text-4xl md:text-6xl">{categoryEmoji(b.category)}</span>
+                )}
               </div>
+              <div className="mt-3 flex-grow">
+                <h3 className="font-bold text-sm md:text-lg leading-tight line-clamp-1">{b.name}</h3>
+                <p className="mt-1 text-[10px] md:text-sm text-gray-400 line-clamp-2">{b.description}</p>
+              </div>
+              <div className="mt-3 flex items-center justify-between">
+                <span className="font-black text-xs md:text-base">{b.price_dzd.toLocaleString()} <span className="text-[10px] font-normal">DA</span></span>
+              </div>
+              <Link to={`/box/${b.id}`} className="mt-3 block text-center w-full py-2 md:py-3 rounded-lg md:rounded-xl bg-black text-white text-[10px] md:text-sm font-bold transition-all hover:bg-yellow-400 hover:text-black active:scale-95 shadow-md">
+                {viewBoxLabel}
+              </Link>
             </div>
-          </div>
-        </aside>
-
-        <section className="lg:col-span-9">
-          {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : filteredBoxes.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-400 font-bold text-lg">
-                {t('no_boxes_filter')}
-              </p>
-              <button onClick={() => setSelectedBudget("All")} className="mt-4 px-6 py-2 rounded-full bg-black text-white text-sm font-bold hover:bg-red-600 transition-all">
-                {t('reset_filters')}
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6">
-              {filteredBoxes.map((b) => (
-                <div key={b.id} className="group rounded-2xl md:rounded-3xl border border-gray-100 p-3 md:p-5 transition-all duration-300 hover:shadow-2xl hover:border-yellow-400 bg-white flex flex-col">
-                  <div className="aspect-square rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center transition-colors group-hover:bg-yellow-50 overflow-hidden">
-                    {b.image_url ? (
-                      <img src={b.image_url} className="w-28 md:w-38 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" alt={b.name} loading="lazy" />
-                    ) : (
-                      <span className="text-4xl md:text-6xl">
-                        {b.category === "Wellness" ? "💆" :
-                         b.category === "Adventure" ? "🏔️" :
-                         b.category === "Restaurant" || b.category === "Restaurants" ? "🍽️" :
-                         b.category === "Weekend" ? "🏨" :
-                         b.category === "Event" ? "🎉" : "🎁"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-3 flex-grow">
-                    <h3 className="font-bold text-sm md:text-lg leading-tight group-hover:text-red-600 transition-colors line-clamp-1">{b.name}</h3>
-                    <p className="mt-1 text-[10px] md:text-sm text-gray-400 line-clamp-1 md:line-clamp-2">{b.description}</p>
-                  </div>
-                  <div className="mt-3 flex flex-col md:flex-row md:items-center justify-between gap-1">
-                    <span className="text-[10px] md:text-xs text-gray-500 flex items-center gap-1 font-medium">
-                      <span className="text-yellow-500">★</span>{b.validity_days}d
-                    </span>
-                    <span className="font-black text-xs md:text-base text-black">{b.price_dzd.toLocaleString()} <span className="text-[10px]">DA</span></span>
-                  </div>
-                  <Link to={`/box/${b.id}`} className="mt-3 block text-center w-full py-2 md:py-3 rounded-lg md:rounded-xl bg-black text-white text-[10px] md:text-sm font-bold transition-all hover:bg-red-600 active:scale-95 shadow-md">
-                    {t('btn_view_box')}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+          ))}
+        </div>
+      )}
     </main>
   );
 }

@@ -172,7 +172,7 @@ export default function PartnerScan() {
         const { data, error: fetchError } = await supabase
           .from("vouchers")
           .select(`
-            id, voucher_code, status, uses_count, qr_token,
+            id, voucher_code, status, uses_count, qr_token, expires_at,
             boxes:box_id (
               name, max_uses,
               box_experiences ( experiences:experience_id ( id, title, description ) )
@@ -203,6 +203,12 @@ export default function PartnerScan() {
           return;
         }
 
+        if (voucher.expires_at && new Date(voucher.expires_at) < new Date()) {
+          setError("Ce voucher a expiré.");
+          setLoading(false);
+          return;
+        }
+
         setInfo({
           id: "",
           redeem_code: voucher.voucher_code ?? "",
@@ -230,7 +236,7 @@ export default function PartnerScan() {
           .select(`
             id, redeem_code, qr_token, status,
             experiences:experience_id ( id, title, city, partners ( name ) ),
-            vouchers:voucher_id ( id, uses_count, orders ( recipient_name, buyer_name, total_dzd ), boxes:box_id ( max_uses ) )
+            vouchers:voucher_id ( id, uses_count, expires_at, orders ( recipient_name, buyer_name, total_dzd ), boxes:box_id ( max_uses ) )
           `)
           .eq("redeem_code", cleanCode)
           .maybeSingle();
@@ -250,6 +256,12 @@ export default function PartnerScan() {
           if (data.status === "REDEEMED") { setError("Ce code a déjà été utilisé."); return; }
         } else {
           if (uses_count >= max_uses) { setError("Ce voucher a été utilisé le nombre maximum de fois."); return; }
+        }
+
+        if (voucher?.expires_at && new Date(voucher.expires_at) < new Date()) {
+          setError("Ce voucher a expiré.");
+          setLoading(false);
+          return;
         }
 
         setInfo({
