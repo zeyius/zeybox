@@ -157,6 +157,7 @@ export default function Home() {
           {/* 3D SLIDER */}
           <div className="relative h-[420px] md:h-[450px] w-full flex items-center justify-center [perspective:1000px]">
             <div className="absolute w-[250px] md:w-[500px] h-[250px] md:h-[500px] bg-red-500/5 rounded-full blur-[80px] md:blur-[140px]" />
+            <div style={{ height: '400px' }} className="relative w-full flex items-center justify-center">
             <Swiper
               key={i18n.language}
               dir={isAr ? 'rtl' : 'ltr'}
@@ -165,32 +166,41 @@ export default function Home() {
               centeredSlides={true}
               slidesPerView={'auto'}
               loop={true}
-              autoplay={{ delay: 3000, disableOnInteraction: false }}
+              initialSlide={1}
+              autoplay={{ delay: 2500, disableOnInteraction: false, pauseOnMouseEnter: false }}
               coverflowEffect={{ rotate: 35, stretch: -20, depth: 300, modifier: 1, slideShadows: false }}
               modules={[EffectCoverflow, Autoplay]}
               className="w-full py-12 !overflow-visible"
+              watchSlidesProgress={true}
+              observer={true}
+              observeParents={true}
+              speed={600}
+              onSwiper={(swiper) => { setTimeout(() => swiper.autoplay.start(), 500) }}
             >
               {boxes.slice(0, 6).map((box) => (
                 <SwiperSlide key={box.id} style={{ width: '220px' }}>
-                  <Link to={`/box/${box.id}`} className="w-full h-80 md:h-72 flex flex-col items-center justify-center cursor-pointer">
+                  <Link to={`/box/${box.id}`} className="w-full flex flex-col items-center justify-center cursor-pointer" style={{ height: '280px' }}>
                     <span className="text-[9px] font-black uppercase tracking-widest bg-red-600 text-white px-3 py-1 rounded-full mb-3">
                       {i18n.language === 'ar' ? "الأكثر مبيعاً" : i18n.language === 'fr' ? "MEILLEURE VENTE" : "BEST SELLER"}
                     </span>
                     {box.image_url ? (
-                      <img
-                        src={box.image_url}
-                        alt={box.name}
-                        className="w-36 md:w-40 object-contain mb-4 md:mb-6 animate-float drop-shadow-lg"
-                        loading="lazy"
-                      />
+                      <div className="w-36 md:w-44 h-36 md:h-44 flex items-center justify-center">
+                        <img
+                          src={box.image_url}
+                          alt={box.name}
+                          className="w-full h-full object-contain animate-float drop-shadow-lg"
+                        />
+                      </div>
                     ) : (
-                      <span className="text-7xl md:text-8xl mb-4 md:mb-6 animate-float drop-shadow-lg">
-                        {box.category === "Restaurants" ? "🍽️" :
-                         box.category === "Wellness" ? "💆" :
-                         box.category === "Adventure" ? "🏔️" :
-                         box.category === "Weekend" ? "🏨" :
-                         box.category === "Event" ? "🎉" : "🎁"}
-                      </span>
+                      <div className="w-36 md:w-44 h-36 md:h-44 flex items-center justify-center">
+                        <span className="text-6xl">
+                          {box.category === "Restaurants" ? "🍽️" :
+                           box.category === "Wellness" ? "💆" :
+                           box.category === "Adventure" ? "🏔️" :
+                           box.category === "Weekend" ? "🏨" :
+                           box.category === "Event" ? "🎉" : "🎁"}
+                        </span>
+                      </div>
                     )}
                     <span className="text-sm md:text-base font-black uppercase text-gray-700 tracking-[0.2em] text-center px-4 line-clamp-1 w-full">
                       {box.name}
@@ -199,6 +209,7 @@ export default function Home() {
                 </SwiperSlide>
               ))}
             </Swiper>
+            </div>
           </div>
         </div>
       </section>
