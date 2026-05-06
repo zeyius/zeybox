@@ -319,7 +319,10 @@ export default function PartnerScan() {
           });
         if (insertError) throw insertError;
 
-        const voucherUpdate: { uses_count: number; status?: string } = { uses_count: newUsesCount };
+        const voucherUpdate: { uses_count: number; status?: string; expires_at?: string } = { uses_count: newUsesCount };
+        if (info.uses_count === 0 && info.max_uses !== null) {
+          voucherUpdate.expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        }
         if (info.max_uses === null || newUsesCount >= (info.max_uses ?? 1)) {
           voucherUpdate.status = "consumed";
         }
@@ -344,7 +347,10 @@ export default function PartnerScan() {
             .insert({ voucher_id: info.voucher_id, scan_number: newUsesCount, redeemed_at: new Date().toISOString(), status: "REDEEMED" });
           if (insertError) throw insertError;
 
-          const voucherUpdate: { uses_count: number; status?: string } = { uses_count: newUsesCount };
+          const voucherUpdate: { uses_count: number; status?: string; expires_at?: string } = { uses_count: newUsesCount };
+          if (info.uses_count === 0 && info.max_uses !== null) {
+            voucherUpdate.expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          }
           if (newUsesCount >= info.max_uses) voucherUpdate.status = "consumed";
           const { error: updateError } = await supabase
             .from("vouchers")
@@ -567,10 +573,16 @@ export default function PartnerScan() {
                   </div>
                 )}
 
-                <div className="rounded-2xl bg-yellow-400/10 border border-yellow-400/20 px-5 py-4">
-                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Montant à encaisser</p>
-                  <p className="text-3xl font-black text-yellow-400">{info.amount_dzd.toLocaleString()} <span className="text-lg">DZD</span></p>
-                </div>
+                {info.uses_count === 0 ? (
+                  <div className="rounded-2xl bg-yellow-400/10 border border-yellow-400/20 px-5 py-4">
+                    <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Montant à encaisser</p>
+                    <p className="text-3xl font-black text-yellow-400">{info.amount_dzd.toLocaleString()} <span className="text-lg">DZD</span></p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-white/5 border border-white/10 px-5 py-4">
+                    <p className="text-xl font-black text-white">{info.max_uses! - info.uses_count} utilisations restantes</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Code</p>
                   <p className="font-mono text-sm text-gray-300">{info.redeem_code}</p>

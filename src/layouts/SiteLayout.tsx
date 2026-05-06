@@ -10,6 +10,9 @@ export default function SiteLayout() {
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const isAr = i18n.language === "ar";
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -28,6 +31,41 @@ export default function SiteLayout() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    const ios = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+    setIsIOS(ios);
+
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    if (isInstalled) return;
+
+    const dismissed = localStorage.getItem('pwa_banner_dismissed');
+    if (dismissed) return;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    });
+
+    if (ios) {
+      setTimeout(() => setShowInstallBanner(true), 3000);
+    }
+  }, []);
+
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      setShowInstallBanner(false);
+    }
+    setShowInstallBanner(false);
+  };
+
+  const handleDismiss = () => {
+    setShowInstallBanner(false);
+    localStorage.setItem('pwa_banner_dismissed', 'true');
+  };
 
   const LANGUAGES = [
     { code: "en", flag: "🇬🇧", label: "English" },
@@ -181,6 +219,37 @@ export default function SiteLayout() {
       <div className="flex-1">
         <Outlet />
       </div>
+
+      {showInstallBanner && (
+        <div className="fixed bottom-0 left-0 right-0 z-[200] p-4 md:hidden">
+          <div className="bg-black text-white rounded-3xl p-4 flex items-center gap-4 shadow-2xl border border-white/10">
+            <div className="h-12 w-12 rounded-xl bg-red-600 flex items-center justify-center shrink-0">
+              <img src="/images/Logo.png" alt="ZEYBOX" className="w-8 h-8 object-contain" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-sm">
+                {i18n.language === 'ar' ? 'أضف ZEYBOX لشاشتك' : i18n.language === 'fr' ? 'Installer ZEYBOX' : 'Install ZEYBOX'}
+              </p>
+              <p className="text-gray-400 text-xs mt-0.5">
+                {isIOS
+                  ? (i18n.language === 'ar' ? 'اضغط على ثم "إضافة للشاشة الرئيسية"' : i18n.language === 'fr' ? 'Appuyez sur puis "Sur l\'écran d\'accueil"' : 'Tap the share button then "Add to Home Screen"')
+                  : (i18n.language === 'ar' ? 'احفظها على هاتفك كتطبيق' : i18n.language === 'fr' ? 'Enregistrez-la comme une vraie app' : 'Save it on your phone like a real app')
+                }
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              {!isIOS && (
+                <button onClick={handleInstall} className="bg-white text-black text-xs font-black px-3 py-1.5 rounded-xl hover:bg-yellow-400 transition-all">
+                  {i18n.language === 'ar' ? 'تثبيت' : i18n.language === 'fr' ? 'Installer' : 'Install'}
+                </button>
+              )}
+              <button onClick={handleDismiss} className="text-gray-500 text-xs font-bold text-center hover:text-white transition-colors">
+                {i18n.language === 'ar' ? 'لاحقاً' : i18n.language === 'fr' ? 'Plus tard' : 'Later'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="bg-black text-white mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-10">

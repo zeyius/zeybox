@@ -1,4 +1,13 @@
-import { Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 import SiteLayout from "./layouts/SiteLayout";
 import Home from "./pages/Home";
 import BestSellers from "./pages/BestSellers";
@@ -16,6 +25,8 @@ import QRPage from "./pages/QRPage";
 
 export default function App() {
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       {/* Partner portal — standalone, no nav */}
       <Route path="/partner/scan" element={<PartnerScan />} />
@@ -36,5 +47,6 @@ export default function App() {
         <Route path="/login" element={<Login />} />
       </Route>
     </Routes>
+    </>
   );
 }
