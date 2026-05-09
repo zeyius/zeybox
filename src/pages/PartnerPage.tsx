@@ -16,7 +16,9 @@ type Partner = {
 type Box = {
   id: string;
   name: string;
+  name_ar?: string;
   description: string | null;
+  description_ar?: string;
   validity_days: number;
   price_dzd: number;
   category: string;
@@ -79,7 +81,7 @@ export default function PartnerPage() {
       // 4. Fetch active boxes
       const { data: boxData } = await supabase
         .from("boxes")
-        .select("id, name, description, validity_days, price_dzd, category, image_url")
+        .select("id, name, name_ar, description, description_ar, validity_days, price_dzd, category, image_url")
         .in("id", boxIds)
         .eq("is_active", true);
 
@@ -193,10 +195,10 @@ export default function PartnerPage() {
 
                   <div className="mt-3 flex-grow">
                     <h3 className="font-bold text-sm md:text-lg leading-tight group-hover:text-red-600 transition-colors line-clamp-1">
-                      {b.name}
+                      {i18n.language === 'ar' ? (b.name_ar || b.name) : b.name}
                     </h3>
                     <p className="mt-1 text-[10px] md:text-sm text-gray-400 line-clamp-1 md:line-clamp-2">
-                      {b.description}
+                      {i18n.language === 'ar' ? (b.description_ar || b.description) : b.description}
                     </p>
                   </div>
 

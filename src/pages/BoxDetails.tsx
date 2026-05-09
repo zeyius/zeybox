@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 type Box = {
   id: string;
   name: string;
+  name_ar?: string;
   description: string | null;
+  description_ar?: string;
   validity_days: number;
   price_dzd: number;
   category: string;
@@ -18,7 +20,9 @@ type Box = {
 type Experience = {
   id: string;
   title: string;
+  title_ar?: string;
   description: string | null;
+  description_ar?: string;
   city: string | null;
   price_dzd: number;
   partner: { name: string } | null;
@@ -26,7 +30,7 @@ type Experience = {
 
 export default function BoxDetails() {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const [box, setBox] = useState<Box | null>(null);
@@ -43,6 +47,16 @@ export default function BoxDetails() {
   const [recipientName, setRecipientName] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [paymentReference, setPaymentReference] = useState("");
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setCurrentUser(data.user);
+        setBuyerEmail(data.user.email || "");
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -51,7 +65,7 @@ export default function BoxDetails() {
 
       const { data: boxData, error: boxErr } = await supabase
         .from("boxes")
-        .select("id,name,description,validity_days,price_dzd,category,image_url,image_url_2,image_url_3")
+        .select("id,name,name_ar,description,description_ar,validity_days,price_dzd,category,image_url,image_url_2,image_url_3")
         .eq("id", id)
         .single();
 
@@ -63,16 +77,20 @@ export default function BoxDetails() {
         .from("box_experiences")
         .select(`
           experiences:experience_id (
-            id, title, description, city, price_dzd,
-            partner:partners ( name )
-          ) 
+            id, title, description, city,
+            partners:partner_id ( name )
+          )
         `)
         .eq("box_id", id);
 
       if (expErr) console.error(expErr);
+      console.log(expData);
 
       const mapped = (expData ?? [])
-        .map((row: any) => row.experiences)
+        .map((row: any) => {
+          const exp = Array.isArray(row.experiences) ? row.experiences[0] : row.experiences;
+          return exp;
+        })
         .filter(Boolean) as Experience[];
 
       setExperiences(mapped);
@@ -258,8 +276,8 @@ export default function BoxDetails() {
                 )}
               </div>
             </div>
-            <h1 className="mt-8 text-4xl font-black">{box.name}</h1>
-            <p className="mt-4 text-gray-500 leading-relaxed text-lg">{box.description}</p>
+            <h1 className="mt-8 text-4xl font-black">{i18n.language === 'ar' ? (box.name_ar || box.name) : box.name}</h1>
+            <p className="mt-4 text-gray-500 leading-relaxed text-lg">{i18n.language === 'ar' ? (box.description_ar || box.description) : box.description}</p>
           </div>
 
           <div className="mt-12">
@@ -270,8 +288,8 @@ export default function BoxDetails() {
                   <div className="text-xs font-bold text-red-600 uppercase tracking-widest mb-2">
                     {e.partner?.name} • {e.city}
                   </div>
-                  <div className="font-bold text-lg">{e.title}</div>
-                  <p className="mt-2 text-sm text-gray-500 line-clamp-3">{e.description}</p>
+                  <div className="font-bold text-lg">{i18n.language === 'ar' ? (e.title_ar || e.title) : e.title}</div>
+                  <p className="mt-2 text-sm text-gray-500 line-clamp-3">{i18n.language === 'ar' ? (e.description_ar || e.description) : e.description}</p>
                 </div>
               ))}
             </div>
@@ -299,17 +317,23 @@ export default function BoxDetails() {
       {checkoutOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-xl rounded-[3rem] bg-white p-8 shadow-2xl border border-gray-100 overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-2">
               <h3 className="text-2xl font-black uppercase italic">{t('checkout_title')}</h3>
               <button onClick={() => setCheckoutOpen(false)} className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center font-bold">✕</button>
             </div>
 
+            {currentUser && (
+              <p className="text-xs text-gray-400 mb-6">Achat en tant que <span className="font-bold">{currentUser.email}</span></p>
+            )}
+
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400">{t('label_buyer_email')}</label>
-                  <input value={buyerEmail} onChange={(e) => setBuyerEmail(e.target.value)} className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none focus:ring-2 focus:ring-red-600/20" />
-                </div>
+                {!currentUser && (
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">{t('label_buyer_email')}</label>
+                    <input value={buyerEmail} onChange={(e) => setBuyerEmail(e.target.value)} className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none focus:ring-2 focus:ring-red-600/20" />
+                  </div>
+                )}
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest text-gray-400">{t('label_buyer_name')}</label>
                   <input value={buyerName} onChange={(e) => setBuyerName(e.target.value)} className="mt-2 w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none focus:ring-2 focus:ring-red-600/20" />

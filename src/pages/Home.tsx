@@ -16,8 +16,10 @@ import 'swiper/css/bundle';
 type Box = {
   id: string;
   name: string;
+  name_ar?: string;
   price_dzd: number;
   description: string | null;
+  description_ar?: string;
   validity_days: number;
   category: string;
   tier: string;
@@ -82,13 +84,13 @@ export default function Home() {
       const [{ data: featuredData }, { data: boxData }, { data: partnerData }, { data: settingsData }] = await Promise.all([
         supabase
           .from("boxes")
-          .select("id, name, price_dzd, description, validity_days, category, tier, image_url")
+          .select("id, name, name_ar, price_dzd, description, description_ar, validity_days, category, tier, image_url")
           .eq("is_active", true)
           .eq("is_featured", true)
           .limit(6),
         supabase
           .from("boxes")
-          .select("id, name, price_dzd, description, validity_days, category, tier, image_url")
+          .select("id, name, name_ar, price_dzd, description, description_ar, validity_days, category, tier, image_url")
           .eq("is_active", true)
           .limit(20),
         supabase
@@ -218,7 +220,7 @@ export default function Home() {
                       </div>
                     )}
                     <span className="text-sm md:text-base font-black uppercase text-gray-700 tracking-[0.2em] text-center px-4 line-clamp-1 w-full">
-                      {box.name}
+                      {i18n.language === 'ar' ? (box.name_ar || box.name) : box.name}
                     </span>
                   </Link>
                 </SwiperSlide>
