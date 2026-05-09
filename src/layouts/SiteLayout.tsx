@@ -8,6 +8,7 @@ export default function SiteLayout() {
   const [session, setSession] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<Record<string, string>>({});
   const langRef = useRef<HTMLDivElement>(null);
   const isAr = i18n.language === "ar";
   const [showInstallBanner, setShowInstallBanner] = useState(false);
@@ -20,6 +21,16 @@ export default function SiteLayout() {
       setSession(newSession);
     });
     return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const { data: settingsData } = await supabase.from("settings").select("key, value");
+      const s: Record<string, string> = {};
+      (settingsData ?? []).forEach((row: any) => { s[row.key] = row.value; });
+      setSiteSettings(s);
+    };
+    loadSettings();
   }, []);
 
   useEffect(() => {
@@ -79,7 +90,11 @@ export default function SiteLayout() {
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
       <div className="w-full bg-black text-white text-sm">
         <div className="max-w-7xl mx-auto px-4 py-2 text-center font-medium">
-          {t('footer_text')}
+          {i18n.language === 'ar'
+            ? (siteSettings['banner_text_ar'] || t('footer_text'))
+            : i18n.language === 'fr'
+            ? (siteSettings['banner_text_fr'] || t('footer_text'))
+            : (siteSettings['banner_text_en'] || t('footer_text'))}
         </div>
       </div>
 

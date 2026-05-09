@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import BoxDetails from "./pages/BoxDetails";
 import Account from "./pages/Account";
 import AdminPartners from "./pages/AdminPartners";
+import AdminOrders from "./pages/AdminOrders";
 import PartnerScan from "./pages/PartnerScan";
 import PartnerLogin from "./pages/PartnerLogin";
 import PartnerPage from "./pages/PartnerPage";
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/best-sellers" element={<BestSellers />} />
         <Route path="/admin/partners" element={<AdminPartners />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
         <Route path="/account" element={<Account />} />
         <Route path="/box/:id" element={<BoxDetails />} />
         <Route path="/partners/:slug" element={<PartnerPage />} />

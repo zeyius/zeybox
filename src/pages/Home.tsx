@@ -35,12 +35,6 @@ const CATEGORY_CARDS = [
   { key: "Travel",      image: "/images/hero4.webp" },
 ];
 
-const HERO_SLIDES = [
-  { image: "/images/hero1.webp", titleEn: "Perfect Gift", titleFr: "Cadeau Parfait", titleAr: "هدية مثالية" },
-  { image: "/images/hero2.webp", titleEn: "Memories", titleFr: "Souvenirs", titleAr: "ذكريات" },
-  { image: "/images/hero3.webp", titleEn: "For You", titleFr: "Pour Vous", titleAr: "لك" },
-  { image: "/images/hero4.webp", titleEn: "Algeria", titleFr: "Algérie", titleAr: "الجزائر" },
-];
 
 const HOW_IT_WORKS = [
   {
@@ -72,12 +66,20 @@ export default function Home() {
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [featuredBoxes, setFeaturedBoxes] = useState<Box[]>([]);
   const [partners, setPartners] = useState<{id: string, name: string, slug: string, cover_image_url: string | null, logo_url: string | null, category: string, city: string | null}[]>([]);
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const explorerRef = useRef<HTMLDivElement>(null);
   const isAr = i18n.language === "ar";
 
+  const HERO_SLIDES = [
+    { image: "/images/hero1.webp", titleEn: settings['hero_title_1_en'] || 'Perfect Gift', titleFr: settings['hero_title_1_fr'] || 'Cadeau Parfait', titleAr: settings['hero_title_1_ar'] || 'هدية مثالية' },
+    { image: "/images/hero2.webp", titleEn: settings['hero_title_2_en'] || 'Memories', titleFr: settings['hero_title_2_fr'] || 'Souvenirs', titleAr: settings['hero_title_2_ar'] || 'ذكريات' },
+    { image: "/images/hero3.webp", titleEn: settings['hero_title_3_en'] || 'For You', titleFr: settings['hero_title_3_fr'] || 'Pour Vous', titleAr: settings['hero_title_3_ar'] || 'لك' },
+    { image: "/images/hero4.webp", titleEn: settings['hero_title_4_en'] || 'Algeria', titleFr: settings['hero_title_4_fr'] || 'Algérie', titleAr: settings['hero_title_4_ar'] || 'الجزائر' },
+  ];
+
   useEffect(() => {
     const loadData = async () => {
-      const [{ data: featuredData }, { data: boxData }, { data: partnerData }] = await Promise.all([
+      const [{ data: featuredData }, { data: boxData }, { data: partnerData }, { data: settingsData }] = await Promise.all([
         supabase
           .from("boxes")
           .select("id, name, price_dzd, description, validity_days, category, tier, image_url")
@@ -93,10 +95,14 @@ export default function Home() {
           .from("partners")
           .select("id, name, slug, description, category, city, cover_image_url, logo_url")
           .eq("is_active", true),
+        supabase.from("settings").select("key, value"),
       ]);
       setFeaturedBoxes((featuredData as Box[]) || []);
       setBoxes((boxData as Box[]) || []);
       setPartners(partnerData ?? []);
+      const s: Record<string, string> = {};
+      (settingsData ?? []).forEach((row: any) => { s[row.key] = row.value; });
+      setSettings(s);
     };
     loadData();
   }, []);
@@ -378,19 +384,19 @@ export default function Home() {
           {/* Stats bar */}
           <div className="mt-12 rounded-[2.5rem] bg-black text-white p-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <p className="text-3xl md:text-4xl font-black text-yellow-400">X+</p>
+              <p className="text-3xl md:text-4xl font-black text-yellow-400">{settings['stat_partners'] || '4+'}</p>
               <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{i18n.language === 'ar' ? "شريك" : i18n.language === 'fr' ? "Partenaires" : "Partners"}</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-black text-yellow-400">X+</p>
+              <p className="text-3xl md:text-4xl font-black text-yellow-400">{settings['stat_experiences'] || '12+'}</p>
               <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{i18n.language === 'ar' ? "تجربة" : i18n.language === 'fr' ? "Expériences" : "Experiences"}</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-black text-yellow-400">90</p>
+              <p className="text-3xl md:text-4xl font-black text-yellow-400">{settings['stat_days'] || '90'}</p>
               <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{i18n.language === 'ar' ? "يوم صلاحية" : i18n.language === 'fr' ? "Jours validité" : "Days validity"}</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-black text-yellow-400">100%</p>
+              <p className="text-3xl md:text-4xl font-black text-yellow-400">{settings['stat_algerian'] || '100%'}</p>
               <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">{i18n.language === 'ar' ? "جزائري" : i18n.language === 'fr' ? "Algérien" : "Algerian"}</p>
             </div>
           </div>
