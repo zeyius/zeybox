@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useTranslation } from "react-i18next";
-import QRCode from "react-qr-code";
 
 type Order = {
   id: string;
@@ -23,8 +22,6 @@ export default function Account() {
   const isAr = i18n.language === 'ar';
 
   const [user, setUser] = useState<{ email?: string } | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const [fullName, setFullName] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,15 +33,6 @@ export default function Account() {
       if (!user) { navigate("/login"); return; }
 
       setUser(user);
-      setEmail(user.email ?? null);
-
-      // Fetch profile
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      setFullName(profile?.full_name ?? null);
 
       // Fetch orders by buyer_email with box name + vouchers
       const { data: ordersData } = await supabase
@@ -66,42 +54,6 @@ export default function Account() {
   const logout = async () => {
     await supabase.auth.signOut();
     navigate("/");
-  };
-
-  const statusColor = (s: string) => {
-    if (s === "PAID") return "bg-green-100 text-green-700";
-    if (s === "PENDING") return "bg-yellow-100 text-yellow-700";
-    return "bg-gray-100 text-gray-500";
-  };
-
-  const voucherStatusColor = (s: string) => {
-    if (s === "consumed") return "text-gray-400 line-through";
-    if (s === "ACTIVE" || s === "active") return "text-green-600 font-bold";
-    return "text-gray-500";
-  };
-
-  const getVoucherStatus = (voucher: any, maxUses: number | null) => {
-    if (!voucher) return null;
-    const now = new Date();
-    const expiresAt = voucher.expires_at ? new Date(voucher.expires_at) : null;
-
-    if (voucher.status === 'consumed') return { label: isAr ? "مُستخدم" : isFr ? "Utilisé" : "Used", color: "text-red-500", dot: "bg-red-500", progress: 0 };
-    if (expiresAt && expiresAt < now) return { label: isAr ? "منتهي" : isFr ? "Expiré" : "Expired", color: "text-gray-400", dot: "bg-gray-400", progress: 0 };
-
-    if (expiresAt) {
-      const totalDays = maxUses ? 30 : 90;
-      const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      const progress = Math.max(0, Math.min(100, (daysLeft / totalDays) * 100));
-      return {
-        label: isAr ? `صالح — ${daysLeft} يوم متبقي` : isFr ? `Valide — ${daysLeft} jours restants` : `Valid — ${daysLeft} days left`,
-        color: "text-green-500",
-        dot: "bg-green-500",
-        progress,
-        daysLeft
-      };
-    }
-
-    return { label: isAr ? "نشط" : isFr ? "Actif" : "Active", color: "text-green-500", dot: "bg-green-500", progress: 100 };
   };
 
   const paidOrders = orders.filter(o => o.status === 'PAID');
